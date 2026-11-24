@@ -73,3 +73,5 @@ Thêm file JS mới ở thư mục gốc thì phải khai báo trong danh sách 
 2. Học Node đầu tiên, chọn **Đã thông suốt**, xem các Node vừa mở.
 3. Xem Giảng viên & chấm điểm, rồi làm một câu trong Ôn thi.
 4. Đặt một câu hỏi ẩn danh.
+
+<!-- Deployment trigger for v1.6: GitHub integration check -->
