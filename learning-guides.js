@@ -1,6 +1,5 @@
 /**
- * DỮ LIỆU HỌC PHẦN MINH HỌA — không phải lịch thi hay yêu cầu của giảng viên hiện tại.
- * Source historical HUST references are independently labeled, never treated as current.
+ * BÀI TẬP LỚN MẪU — minh họa, không phải yêu cầu của giảng viên hiện tại.
  */
 export const courseGuides = {
  network: {
@@ -14,16 +13,7 @@ export const courseGuides = {
    {title:'Thử lỗi và hoàn thiện',detail:'Kiểm tra nhận thiếu, client thoát đột ngột, tin dài, lệnh sai, server restart và dọn socket/file descriptor.',node:'net-practice',output:'Bộ test thủ công hoặc tự động, ảnh minh họa và báo cáo.'}
   ],
   deliverables:['Mã nguồn server và client; lệnh build/run','Mô tả giao thức và kiến trúc','Phân công công việc nếu làm nhóm','Kịch bản kiểm thử và kết quả','Báo cáo ngắn + ảnh chụp/demo'],
-  lecturer:[
-   {title:'Trước khi làm',items:['Đọc đề giao chính thức và hỏi rõ: cho phép dùng thư viện nào, hệ điều hành nào?','Xác nhận yêu cầu nhóm, mốc kiểm tra tiến độ và định dạng nộp.']},
-   {title:'Khi nộp',items:['Chuẩn bị hướng dẫn chạy đủ để người chấm biên dịch lại.','Tách mã nguồn khỏi file build; có log kiểm thử nhiều client và phân công thành viên.','Những điều trên là checklist minh họa, không phải nội quy giảng viên hiện tại.']}
-  ],
-  assessment: [
-   {title:'Bài tập/lab trong kỳ',detail:'Mô phỏng: giải thích socket, lập trình TCP/UDP và demo xử lý lỗi. Không gán tỷ trọng điểm nếu chưa có thông báo lớp.'},
-   {title:'Bài tập lớn / bảo vệ',detail:'Mô phỏng: chạy server-client trực tiếp, giải thích giao thức, chứng minh chạy đồng thời và xử lý dữ liệu nhận thiếu.'},
-   {title:'Thi viết (nếu lớp có)',detail:'Mô phỏng: câu hỏi socket API, TCP so với UDP, blocking/non-blocking, select/poll/epoll; dạng thi thực tế tùy học phần/lớp.'}
-  ],
-  reference:{title:'Tài liệu IT4062 của giảng viên HUST (lưu trữ)',description:'Hai trang học phần công khai trong quá khứ có cách phân bổ điểm khác nhau: 50% bài tập + 50% mini project và 30% quá trình + 70% mini project. Chỉ minh họa sự khác nhau giữa đề cương, KHÔNG xác nhận áp dụng cho lớp hiện tại.',links:[{title:'Trang IT4062 — Bùi Trọng Tùng',url:'https://users.soict.hust.edu.vn/tungbt/it4062/'},{title:'Đề cương IT4062 — Phạm Huy Hoàng',url:'https://users.soict.hust.edu.vn/hoangph/courses/IT4062/it4062_syllabus.pdf'}]}
+  reference:{title:'Trang môn học công khai',description:'Yêu cầu dự án của các lớp trước có thể khác lớp bạn.',links:[{title:'Trang IT4062 — Bùi Trọng Tùng',url:'https://users.soict.hust.edu.vn/tungbt/it4062/'},{title:'Đề cương IT4062 — Phạm Huy Hoàng',url:'https://users.soict.hust.edu.vn/hoangph/courses/IT4062/it4062_syllabus.pdf'}]}
  },
  web:{
   scenario:'Xây website quản lý công việc nhóm có giao diện và REST API',
@@ -35,9 +25,7 @@ export const courseGuides = {
    {title:'Kết nối client–server',detail:'Dùng fetch/async-await, kiểm tra response.ok, xử lý mất kết nối và nhập dữ liệu không hợp lệ.',node:'web-async',output:'Frontend thao tác được với API thật.'},
    {title:'Kiểm thử & triển khai',detail:'Validate ở cả frontend/backend, tránh XSS, chạy thử trên thiết bị nhỏ và viết hướng dẫn deploy.',node:'web-project',output:'Source, README, URL demo và checklist test.'}
   ],
-  deliverables:['Repository có README và hướng dẫn chạy','Tài liệu yêu cầu và sơ đồ API','Giao diện responsive + backend hoạt động','Dữ liệu mẫu hoặc cách khởi tạo CSDL','Bài test lỗi phổ biến và URL demo'],
-  lecturer:[{title:'Tiêu chí cần hỏi giảng viên',items:['Cho phép framework nào? Có bắt buộc REST, database, đăng nhập không?','Số thành viên nhóm, phạm vi demo, deadline và số trang báo cáo?']},{title:'Checklist khi bảo vệ (minh họa)',items:['Cho xem luồng tạo–sửa–xóa qua trình duyệt.','Giải thích cách client gọi API, validate, xử lý lỗi và phân công nhóm.','Không công bố rubrics và trọng số giả định như yêu cầu chính thức.']}],
-  assessment:[{title:'Bài thực hành giữa kỳ (mẫu)',detail:'Cấu trúc HTML/CSS, JavaScript DOM, form, xử lý sự kiện.'},{title:'Bài tập lớn (mẫu)',detail:'Đánh giá demo giao diện, API hoạt động, dữ liệu và giải thích kiến trúc.'},{title:'Cuối kỳ (mẫu, nếu có)',detail:'Các câu hỏi HTTP, JavaScript bất đồng bộ, REST và bảo mật căn bản; hình thức thi cần xác nhận từng lớp.'}]
+  deliverables:['Repository có README và hướng dẫn chạy','Tài liệu yêu cầu và sơ đồ API','Giao diện responsive + backend hoạt động','Dữ liệu mẫu hoặc cách khởi tạo CSDL','Bài test lỗi phổ biến và URL demo']
  },
  ml:{
   scenario:'Xây quy trình dự đoán giá nhà bằng hồi quy và so sánh mô hình',
@@ -49,9 +37,7 @@ export const courseGuides = {
    {title:'Kiểm tra overfitting',detail:'Thử cây quyết định với độ sâu khác nhau; so sánh train/validation để phát hiện học thuộc.',node:'ml-trees',output:'Bảng hoặc đồ thị train/validation error.'},
    {title:'Đánh giá & báo cáo',detail:'Chỉ xem test khi chốt mô hình, phân tích residual và những điểm chưa chắc chắn.',node:'ml-evaluation',output:'Notebook, hình kết quả, kết luận có giới hạn.'}
   ],
-  deliverables:['Notebook có seed và thứ tự thao tác chạy lại được','Nguồn dữ liệu và cách chia train/val/test','Bảng metric so sánh cùng split','Biểu đồ sai số/phân tích kết quả','Slide hoặc báo cáo kết luận và hạn chế'],
-  lecturer:[{title:'Trước khi bắt đầu (mẫu)',items:['Xác nhận có được dùng dữ liệu ngoài, thư viện scikit-learn và notebook hay không.','Làm rõ tiêu chí chấm: độ chính xác, giải thích thuật toán, tái lập hay chất lượng báo cáo.']},{title:'Khi trình bày (mẫu)',items:['Nêu metric phù hợp và vì sao không dùng accuracy cho hồi quy.','Giải thích dữ liệu bị leakage gây điểm đánh giá lạc quan.','Không khẳng định cần sử dụng thuật toán ngoài phạm vi giảng viên giao.']}],
-  assessment:[{title:'Kiểm tra kiến thức (minh họa)',detail:'Học giám sát/không giám sát, train/test, bias–variance, Ridge/Lasso, cây quyết định, SVM.'},{title:'Bài thực hành/project (minh họa)',detail:'Notebook có pipeline, so sánh mô hình, thuyết minh metric và kiểm soát leakage.'},{title:'Thi cuối kỳ (minh họa)',detail:'Bài lý thuyết/tính toán hoặc trắc nghiệm theo thông báo lớp; không giả định tỷ lệ hay định dạng cố định.'}]
+  deliverables:['Notebook có seed và thứ tự thao tác chạy lại được','Nguồn dữ liệu và cách chia train/val/test','Bảng metric so sánh cùng split','Biểu đồ sai số/phân tích kết quả','Slide hoặc báo cáo kết luận và hạn chế']
  },
  iot:{
   scenario:'Thiết kế hệ thống giám sát nhiệt độ và độ ẩm qua MQTT',
@@ -63,8 +49,6 @@ export const courseGuides = {
    {title:'Định nghĩa topic và MQTT',detail:'Ví dụ topic lab/roomA/temperature, QoS và retained message tùy nhu cầu; test subscribe bằng một client khác.',node:'iot-mqtt',output:'Sơ đồ topic + log publish/subscribe.'},
    {title:'Hiển thị và kiểm thử',detail:'Hiển thị nhiệt độ theo thời gian, cờ cảnh báo, mô phỏng mất tín hiệu và dữ liệu sai.',node:'iot-project',output:'Dashboard demo, test case, README và báo cáo.'}
   ],
-  deliverables:['Sơ đồ thiết bị–mạng–broker–dashboard','Mã mô phỏng hoặc firmware cảm biến','Quy ước MQTT topic và payload','Dashboard + test mất mạng/dữ liệu sai','Video/ảnh demo + hướng dẫn chạy lại'],
-  lecturer:[{title:'Cần xác nhận trước khi làm (mẫu)',items:['Bắt buộc dùng phần cứng thật hay cho phép mô phỏng?','Cho phép broker cloud hay phải triển khai cục bộ? Có yêu cầu bảo mật hoặc năng lượng không?']},{title:'Checklist demo (mẫu)',items:['Cho xem dữ liệu từ sensor hoặc simulator đến dashboard.','Ngắt kết nối thử và giải thích cơ chế reconnect, QoS.','Phân biệt minh họa với quy định của giảng viên.']}],
-  assessment:[{title:'Thực hành (minh họa)',detail:'Nối cảm biến, đọc dữ liệu, truyền qua mạng và phát hiện lỗi.'},{title:'Bài tập lớn (minh họa)',detail:'Đánh giá luồng end-to-end và demo broker–dashboard.'},{title:'Cuối kỳ (minh họa)',detail:'Kiến trúc IoT, giao thức MQTT, topic/QoS, mức độ bảo mật; tỷ trọng và hình thức phải kiểm tra đề cương lớp.'}]
+  deliverables:['Sơ đồ thiết bị–mạng–broker–dashboard','Mã mô phỏng hoặc firmware cảm biến','Quy ước MQTT topic và payload','Dashboard + test mất mạng/dữ liệu sai','Video/ảnh demo + hướng dẫn chạy lại']
  }
 };

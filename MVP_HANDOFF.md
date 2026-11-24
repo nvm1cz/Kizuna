@@ -89,3 +89,12 @@
 - Bản đồ kiến thức bỏ gợi ý học tiếp; tô nền xanh Node đã thông suốt, bảo toàn tiến độ localStorage từ bản trước.
 - Môn IT4062 bổ sung DNS, truyền tệp và HTTP server; học liệu chỉ là nguồn tham khảo MVP, chưa được giảng viên xác nhận.
 - Cẩm nang còn Bài tập lớn, Review giảng viên & Chấm điểm, Kiểm tra. Review gửi ẩn danh về backend ở trạng thái chờ duyệt, không tự động công khai.
+
+
+## MVP v1.6 (2026-11-24)
+- Thiết kế lại toàn bộ giao diện: thanh điều hướng 3 mục (thanh dưới trên mobile), chữ nội dung 16px, nhỏ nhất 14px. Bỏ sidebar, breadcrumb, nhãn phiên bản, tên hiển thị, lối tắt và các dòng cảnh báo lặp lại.
+- Khóa Node: chỉ mở khi mọi Node tiên quyết đã thông suốt (`learning-path.js`).
+- Mục Giảng viên & chấm điểm do nhóm cung cấp (`lecturers.js`). Bỏ form và API `lecturerReview`; review cũ trong Blob không bị xóa.
+- Mục Kiểm tra đổi thành Ôn thi (`exams.js`): đề công khai giữa kỳ, cuối kỳ và đề tự luyện.
+- Tách `app.js` thành `app.js`, `views.js`, `store.js`. Gỡ `course-evidence.js`.
+- `npm test` chạy được trên Windows; 19 kiểm thử.

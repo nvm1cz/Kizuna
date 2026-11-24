@@ -9,7 +9,7 @@ test('Community question action opens composer in place; optional course/topic s
   globalThis.localStorage={getItem:key=>store.get(key)||null,setItem:(key,value)=>store.set(key,value)};
   globalThis.location={hash:'#/community'};
   globalThis.window={scrollY:0,scrollTo:()=>{},addEventListener:(name,cb)=>handlers['window:'+name]=cb};
-  globalThis.document={body:{style:{}},getElementById:id=>id==='app'?app:id==='ask-node'?topic:id==='main-content'?{scrollIntoView(){}}:null,querySelector:()=>null,addEventListener:(name,cb)=>handlers[name]=cb};
+  globalThis.document={body:{style:{}},getElementById:id=>id==='app'?app:id==='ask-node'?topic:id==='main-content'?{scrollIntoView(){}}:null,querySelector:()=>null,querySelectorAll:()=>[],addEventListener:(name,cb)=>handlers[name]=cb};
   globalThis.requestAnimationFrame=()=>{};
   globalThis.fetch=async(url,opts={})=>{
     if(opts.method==='POST'){
@@ -48,9 +48,9 @@ test('Community question action opens composer in place; optional course/topic s
   assert.equal(submitted[1].nodeId,'');
   assert.equal(globalThis.location.hash,'#/community');
   assert.match(app.innerHTML,/Câu hỏi chưa có tiêu đề/);
-  globalThis.location.hash='#/node/net-tcp';
+  globalThis.location.hash='#/node/net-foundation';
   handlers['window:hashchange']();
-  click({action:'ask',node:'net-tcp'});
-  assert.match(app.innerHTML,/name="nodeId" value="net-tcp"/);
+  click({action:'ask',node:'net-foundation'});
+  assert.match(app.innerHTML,/name="nodeId" value="net-foundation"/);
   assert.doesNotMatch(app.innerHTML,/id="ask-course"/);
 });

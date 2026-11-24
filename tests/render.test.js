@@ -1,33 +1,37 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import {boot} from './helpers.js';
 
-test('Minimal course guide has project, lecturer review & grading, exam; no lectures or Bot',async()=>{
- const handlers={};const store=new Map();const app={innerHTML:''};
- globalThis.localStorage={getItem:k=>store.get(k)||null,setItem:(k,v)=>store.set(k,v)};
- globalThis.location={hash:'#/course/network'};
- globalThis.window={scrollY:0,scrollTo:()=>{},addEventListener:(n,fn)=>handlers['window:'+n]=fn};
- globalThis.document={body:{style:{}},getElementById:id=>id==='app'?app:null,querySelector:()=>null,addEventListener:(n,fn)=>handlers[n]=fn};
- globalThis.requestAnimationFrame=()=>{};
- globalThis.fetch=async()=>({ok:false});
- await import('../app.js');
- const click=dataset=>handlers.click({target:{closest:()=>({dataset})}});
- assert.match(app.innerHTML,/Bài tập lớn, review giảng viên & kiểm tra/);
- assert.doesNotMatch(app.innerHTML,/data-action="chat-open"|Kizuna Bot|GỢI Ý HỌC TIẾP/);
- click({action:'guide-toggle'});
- assert.match(app.innerHTML,/Bài tập lớn/);
- assert.match(app.innerHTML,/Review giảng viên & Chấm điểm/);
- assert.match(app.innerHTML,/Kiểm tra/);
- assert.doesNotMatch(app.innerHTML,/data-tab="lecture"|data-tab="grading"|data-tab="lecturer"/);
- assert.match(app.innerHTML,/Xây dựng một chatroom TCP/);
- click({action:'guide-tab',tab:'reviews'});
- assert.match(app.innerHTML,/id="lecturer-review-form"/);
- assert.match(app.innerHTML,/Cách chấm điểm/);
- assert.match(app.innerHTML,/50% bài tập/);
- click({action:'guide-tab',tab:'assessment'});
- assert.match(app.innerHTML,/Chuẩn bị kiểm tra và bảo vệ/);
- location.hash='#/node/net-tcp';handlers['window:hashchange']();
- for(const heading of ['Tóm tắt khái niệm','Tài liệu tham khảo chọn lọc','Cảnh báo bẫy','Flash-check','Câu hỏi','Đánh giá đã hiểu chưa']) assert.ok(app.innerHTML.includes(heading),heading);
- assert.equal((app.innerHTML.match(/class="node-step"/g)||[]).length,6);
- assert.match(app.innerHTML,/data-status="clear"/);
- assert.doesNotMatch(app.innerHTML,/Kizuna Bot|Hỏi bot|bot-launch/);
+test('trang môn học, giảng viên, ôn thi và Node hiển thị đúng phần', async () => {
+  const {app, go, click} = await boot('#/course/network');
+  for (const tab of ['Bản đồ kiến thức', 'Bài tập lớn', 'Giảng viên & chấm điểm', 'Ôn thi']) assert.ok(app.innerHTML.includes(tab), tab);
+  assert.doesNotMatch(app.innerHTML, />Kiểm tra</);
+
+  go('#/course/network/project');
+  assert.match(app.innerHTML, /Xây dựng một chatroom TCP/);
+
+  go('#/course/network/lecturers');
+  for (const label of ['Cách chấm điểm', 'Tính cách', 'Điểm danh', 'Dữ liệu mẫu', 'Bùi Trọng Tùng']) assert.ok(app.innerHTML.includes(label), label);
+  assert.doesNotMatch(app.innerHTML, /<form|lecturer-review/, 'người dùng không nhập review');
+
+  go('#/course/network/exams');
+  assert.match(app.innerHTML, /Giữa kỳ 20121/);
+  assert.doesNotMatch(app.innerHTML, /Cuối kỳ 20132/);
+  click({action: 'exam-term', term: 'final'});
+  assert.match(app.innerHTML, /Cuối kỳ 20132/);
+  assert.doesNotMatch(app.innerHTML, /class="answer"/);
+  click({action: 'exam-answer', key: 'network:final:0'});
+  assert.match(app.innerHTML, /class="answer"/);
+  go('#/course/iot/exams');
+  assert.match(app.innerHTML, /Chưa có đề cuối kỳ các năm trước/);
+
+  go('#/node/net-foundation');
+  for (const heading of ['Tóm tắt khái niệm', 'Tài liệu chọn lọc', 'Cảnh báo bẫy', 'Flash-check', 'Hỏi đáp', 'Tự đánh giá']) assert.ok(app.innerHTML.includes(heading), heading);
+  assert.equal((app.innerHTML.match(/class="node-step"/g) || []).length, 6);
+
+  const routes = [['#/home', 'Chọn môn học'], ['#/courses', 'Chọn môn học'], ['#/my', 'Của tôi'], ['#/help', 'Góp ý cho nhóm'], ['#/node/sai', 'Không tìm thấy trang'], ['#/constructor', 'Không tìm thấy trang']];
+  for (const [hash, text] of routes) {
+    go(hash);
+    assert.ok(app.innerHTML.includes(text), hash);
+  }
 });

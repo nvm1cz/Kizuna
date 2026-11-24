@@ -22,7 +22,7 @@ http.createServer(async(req,res)=>{
   const requested=url.pathname==='/'?'index.html':decodeURIComponent(url.pathname.slice(1));
   const location=path.resolve(root,requested);
   if(!location.startsWith(root+path.sep))return send(res,403,{error:'Forbidden'});
-  if(!['index.html','app.js','data.js','learning-guides.js','course-evidence.js','icons.js','styles.css','favicon.svg'].includes(requested))return send(res,404,{error:'Not found'});
+  if(!['index.html','app.js','data.js','learning-guides.js','lecturers.js','exams.js','learning-path.js','store.js','views.js','icons.js','styles.css','favicon.svg'].includes(requested))return send(res,404,{error:'Not found'});
   const content=await fs.readFile(location);res.writeHead(200,{'Content-Type':MIME[path.extname(location)]||'application/octet-stream'});res.end(content);
  }catch(e){if(e.code==='ENOENT')return send(res,404,{error:'Not found'});console.error(e);send(res,e.status||500,{error:e.status?e.message:'Có lỗi xảy ra.'});}
 }).listen(port,()=>console.log(`Kizuna local → http://localhost:${port}`));

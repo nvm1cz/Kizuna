@@ -1,219 +1,315 @@
-import {courses,nodes,sampleQuestions,stages,getCourse,getNode,nodesOf} from './data.js';
-import {ico} from './icons.js';
-import {courseGuides} from './learning-guides.js';
-import {courseEvidence} from './course-evidence.js';
-const KEY='kizuna-mvp-state-v1';
-const APP=document.getElementById('app');
-const local=(()=>{try{const raw=JSON.parse(localStorage.getItem(KEY)||'{}');return {...raw, progress:raw.progress||{},saved:raw.saved||[],answers:raw.answers||{},name:raw.name||'Người khám phá',device:raw.device||crypto.randomUUID()};}catch{return {progress:{},saved:[],answers:{},name:'Người khám phá',device:crypto.randomUUID()};}})();
-const state={route:'home',segments:[],search:'',filter:'all',communityFilter:'all',communitySearch:'',modal:null,expanded:new Set(),qa:{questions:[...sampleQuestions],replies:[],nodeCounts:{},myEmpathy:[]},qaLoading:true,qaError:false,menu:false,busy:false,guideTab:'project',pendingGuide:false,guideOpen:false,flashIndex:{},qaExpanded:false};
-const esc=v=>String(v??'').replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
-const escAttr=esc;
-const countNoun=(n,s)=>`${n} ${s}`;
-const safeName=s=>String(s||'').trim().slice(0,35);
-const persist=()=>{localStorage.setItem(KEY,JSON.stringify(local));};
-const getStatus=id=>local.progress[id]||null;
-const statusLabel=id=>({'explore':'Đang khám phá','stuck':'Cần gỡ rối','clear':'Đã thông suốt'})[getStatus(id)]||'Chưa đánh dấu';
-const countStatus=status=>Object.values(local.progress).filter(x=>x===status).length;
-const isSaved=id=>local.saved.includes(id);
-const hasEmpathy=(type,id)=>state.qa.myEmpathy.includes(type+':'+id);
-const empathyCount=(type,id)=>type==='node'?state.qa.nodeCounts[id]||0:state.qa.questions.find(q=>q.id===id)?.empathyCount||0;
-const questionCount=id=>state.qa.questions.filter(q=>q.nodeId===id).length;
-const getPath=()=>{const bits=(location.hash||'#/home').replace(/^#\/?/,'').split('/').filter(Boolean);return bits.length?bits:['home'];};
-const goto=path=>{if(path.startsWith('node/'))state.qaExpanded=false;location.hash='#/'+path;state.menu=false;window.scrollTo(0,0);};
-const courseIds=new Set(courses.map(c=>c.id));
-const nodeIds=new Set(nodes.map(n=>n.id));
-function notify(text,bad=false){const host=document.querySelector('.toast-stack');if(!host)return;const el=document.createElement('div');el.className='toast'+(bad?' error':'');el.textContent=text;host.append(el);setTimeout(()=>el.remove(),4200);}
-async function apiPost(payload){const r=await fetch('/api/community',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({...payload,actorId:local.device})});const data=await r.json().catch(()=>({error:'Phản hồi không hợp lệ'}));if(!r.ok)throw new Error(data.error||'Không thể thực hiện.');return data;}
-async function loadCommunity(silent=false){try{const r=await fetch('/api/community',{headers:{'x-kizuna-device':local.device},cache:'no-store'});if(!r.ok)throw Error('offline');const qa=await r.json();if(!Array.isArray(qa.questions))throw Error('invalid');state.qa=qa;state.qaError=false;}catch{state.qaError=true;if(!silent)notify('Chưa thể kết nối cộng đồng. Bạn vẫn có thể học và tự kiểm tra.',true);}finally{state.qaLoading=false;render(true);}}
-function logo(){return `<a class="brand" href="#/home" aria-label="Kizuna - Trang chủ"><span class="brand-symbol">絆</span><span><strong class="brand-name">kizuna<span style="color:#62ac91">.</span></strong><small class="brand-sub">LEARN TOGETHER</small></span></a>`;}
-const navLinks=[['home','home','Trang chủ'],['courses','compass','Môn học'],['community','message','Hỏi đáp'],['my','bookmark','Đã lưu']];
-function sidebar(){return `<div class="sidebar-scrim ${state.menu?'show':''}" data-action="close-menu"></div><aside class="sidebar ${state.menu?'show':''}">${logo()}<nav class="nav-group" aria-label="Điều hướng chính">${navLinks.map(([route,ic,label])=>`<button type="button" class="nav-link ${route===state.route||(route==='courses'&&['course','node'].includes(state.route))?'active':''}" data-action="navigate" data-path="${route}">${ico(ic,19)}<span>${label}</span></button>`).join('')}</nav><div class="side-bottom"><button type="button" class="nav-link side-help" data-action="navigate" data-path="help">${ico('help',19)}<span>Trợ giúp & góp ý</span></button><div class="side-footer"><div class="avatar">${ico('user',17)}</div><div><strong>${esc(local.name)}</strong><small>Lưu trên thiết bị</small></div><button class="icon-btn" style="margin-left:auto" title="Đổi tên" data-action="profile">${ico('pencil',15)}</button></div></div></aside>`;}
-function breadcrumb(){const parts=[['home','Trang chủ']];if(state.route==='course'){parts.push(['courses','Môn học'],['',''+(getCourse(state.segments[1])?.name||'Môn học')]);}else if(state.route==='node'){const n=getNode(state.segments[1]);if(n)parts.push(['course/'+n.courseId,getCourse(n.courseId).name],['',n.title]);}else if(state.route!=='home')parts.push(['',({courses:'Môn học',community:'Hỏi đáp',my:'Đã lưu',help:'Trợ giúp'})[state.route]||'Tổng quan']);return parts.map((p,i)=>`${i?ico('chevron',13):''}<span class="${i===parts.length-1?'active-crumb':''}">${p[0]?`<a href="#/${p[0]}" style="text-decoration:none">${esc(p[1])}</a>`:esc(p[1])}</span>`).join('');}
-function header(){return `<header class="topbar"><div class="top-start"><button aria-label="Mở menu" class="icon-btn mobile-top" data-action="toggle-menu">${ico('menu',20)}</button><div class="breadcrumb">${breadcrumb()}</div></div><div class="top-actions"><span class="top-version">Bản dùng thử</span><button aria-label="Hướng dẫn" title="Hướng dẫn" class="icon-btn" data-action="navigate" data-path="help">${ico('help',18)}</button></div></header>`;}
-function title(eyebrow,name,desc){return `<div class="header-row"><div><span class="eyebrow">${eyebrow}</span><h1 class="page-title">${name}</h1>${desc?`<p class="page-desc">${desc}</p>`:''}</div></div>`;}
-function courseCard(c){const n=nodesOf(c.id);const marked=n.filter(x=>getStatus(x.id)).length;return `<article class="course-card"><div class="course-top"><span class="course-icon" style="background:${c.soft};color:${c.color}">${ico(c.icon,24)}</span><span class="course-code">${esc(c.code)}</span></div><h3>${esc(c.name)}</h3><p>${esc(c.short)}</p><div class="course-foot"><small>${n.length} chủ đề${marked?` · ${marked} đã học`:''}</small><button type="button" data-action="navigate" data-path="course/${c.id}">Khám phá ${ico('arrow',15)}</button></div></article>`;}
-function hero(){return `<section class="hero"><div class="hero-text"><p class="hero-kicker">KIZUNA · HỌC CÙNG NHAU</p><h1>Bạn đang muốn <em>hiểu điều gì?</em></h1><p>Chọn môn, mở bản đồ kiến thức, tự kiểm tra hoặc hỏi ngay khi bí.</p><div class="hero-actions"><button class="btn btn-dark" data-action="navigate" data-path="courses">Chọn môn học ${ico('arrow',17)}</button><button class="btn btn-hero-secondary" data-action="navigate" data-path="community">${ico('message',17)} Hỏi cộng đồng</button></div></div><div class="hero-art" aria-hidden="true"><div class="orb one"></div><div class="orb two"></div><span class="float-node a">${ico('book',28)}</span><span class="float-node c">${ico('message',27)}</span></div></section>`;}
-function home(){return `${hero()}<section class="section"><div class="header-row"><div><h2 class="section-title">Chọn một môn để bắt đầu</h2></div><button class="text-link" data-action="navigate" data-path="courses">Tìm môn ${ico('arrow',15)}</button></div><div class="course-grid">${courses.map(courseCard).join('')}</div></section><div class="home-shortcuts"><button type="button" class="shortcut-card" data-action="navigate" data-path="community"><span class="shortcut-icon">${ico('message',21)}</span><span><strong>Góc hỏi đáp</strong><small>Hỏi ẩn danh, xem lời giải từ cộng đồng</small></span>${ico('arrow',17)}</button><button type="button" class="shortcut-card" data-action="navigate" data-path="my"><span class="shortcut-icon">${ico('bookmark',21)}</span><span><strong>Kiến thức đã lưu</strong><small>Tiếp tục nơi bạn dừng lại</small></span>${ico('arrow',17)}</button></div><p class="demo-footnote">Nội dung học phần là dữ liệu minh họa cho bản MVP.</p>`;}
-function coursesPage(){const q=state.search.toLowerCase().trim();const filtered=courses.filter(c=>[c.name,c.code,c.short,...c.tags].join(' ').toLowerCase().includes(q));return `${title('MÔN HỌC','Bạn muốn học gì?','Chọn một môn hoặc tìm theo tên, mã môn và chủ đề.') }<div class="tools-row"><label class="searchbox">${ico('search',18)}<input id="course-search" type="search" value="${escAttr(state.search)}" placeholder="Tìm môn học hoặc chủ đề..." aria-label="Tìm môn học"></label></div>${filtered.length?`<div class="course-grid">${filtered.map(courseCard).join('')}</div>`:`<div class="empty">${ico('search',27)}<strong>Không tìm thấy môn phù hợp</strong><button class="btn btn-outline" data-action="reset-courses">Xóa tìm kiếm</button></div>`}<p class="demo-footnote">Dữ liệu môn học dùng để minh họa trải nghiệm.</p>`;}
-function guidePanel(courseId){
- const g=courseGuides[courseId];if(!g)return '';
- const e=courseEvidence[courseId];const tab=state.guideTab;const sections=[['project','Bài tập lớn','layers'],['reviews','Review giảng viên & Chấm điểm','user'],['assessment','Kiểm tra','book']];
- const makeList=items=>`<ul class="guide-checks">${items.map((item,i)=>{const id=courseId+':'+i+':'+item.slice(0,12);const checked=!!local.guideChecks?.[id];return `<li><label><input type="checkbox" data-guide-check="${escAttr(id)}" ${checked?'checked':''}><span>${esc(item)}</span></label></li>`}).join('')}</ul>`;
- let content='';
- if(tab==='project')content=`<div class="guide-intro"><span class="guide-chip">BÀI TẬP LỚN MẪU</span><h3>${esc(g.scenario)}</h3><p>${esc(g.outcome)}</p></div><div class="guide-flow">${g.project.map((step,i)=>`<article class="guide-step"><span class="guide-step-num">${String(i+1).padStart(2,'0')}</span><div><h4>${esc(step.title)}</h4><p>${esc(step.detail)}</p><div class="guide-step-foot"><span>${ico('check',14)} Kết quả: ${esc(step.output)}</span><button type="button" class="text-link" data-action="navigate" data-path="node/${step.node}">Mở Node ${ico('arrow',14)}</button></div></div></article>`).join('')}</div><h3 class="guide-subhead">Checklist nộp bài</h3>${makeList(g.deliverables)}`;
- else if(tab==='reviews')content=`<div class="guide-intro"><span class="guide-chip">ĐÁNH GIÁ CÓ NGUỒN</span><h3>Review giảng viên & Chấm điểm</h3><p>Chưa có review giảng viên được kiểm duyệt. Bạn có thể gửi đánh giá ẩn danh cho nhóm biên tập; nội dung không tự động công khai.</p></div><div class="review-and-grade"><section class="guide-info review-form-card"><h4>Gửi review giảng viên</h4><form id="lecturer-review-form"><input type="hidden" name="courseId" value="${escAttr(courseId)}"><div class="form-field"><label for="review-lecturer">Tên giảng viên</label><input class="field" id="review-lecturer" name="lecturer" maxlength="90" required placeholder="Tên giảng viên bạn đã học"></div><div class="review-form-grid"><div class="form-field"><label for="review-term">Học kỳ (không bắt buộc)</label><input class="field" id="review-term" name="term" maxlength="50" placeholder="Ví dụ: 2026.1"></div><div class="form-field"><label for="review-rating">Trải nghiệm học tập</label><select class="field" id="review-rating" name="rating" required><option value="">Chọn mức</option><option value="5">5 — Rất tốt</option><option value="4">4 — Tốt</option><option value="3">3 — Bình thường</option><option value="2">2 — Khó theo kịp</option><option value="1">1 — Cần cải thiện</option></select></div></div><div class="form-field"><label for="review-text">Nhận xét về cách giảng dạy và đánh giá</label><textarea class="field textarea" id="review-text" name="text" minlength="20" maxlength="1000" required placeholder="Chia sẻ trải nghiệm cụ thể, tôn trọng người được nhận xét..."></textarea></div><button class="btn btn-primary" type="submit" ${state.busy?'disabled':''}>${ico('send',15)} Gửi review ẩn danh</button><p class="guide-warning">Nhóm chỉ sử dụng các review sau khi kiểm tra; không đăng thông tin cá nhân nhạy cảm hoặc cáo buộc chưa kiểm chứng.</p></form></section><section class="guide-grade-list"><h4>Cách chấm điểm (theo nguồn công khai)</h4><p class="guide-warning">${esc(e?.note||'Chưa xác nhận với lớp hiện tại.')}</p>${(e?.grading||[]).map(x=>`<article class="guide-info guide-evidence"><h4>${esc(x.title)}</h4>${x.period?`<small>${esc(x.period)}</small>`:''}<p>${esc(x.detail)}</p>${x.url?`<a href="${escAttr(x.url)}" target="_blank" rel="noopener noreferrer">Xem nguồn ${ico('external',13)}</a>`:''}</article>`).join('')}</section></div>`;
- else content=`<div class="guide-intro"><span class="guide-chip">HÌNH THỨC KIỂM TRA</span><h3>Chuẩn bị kiểm tra và bảo vệ</h3><p>Đối chiếu với đề cương và LMS của lớp hiện tại.</p></div><div class="guide-pair">${(e?.tests||[]).map(x=>`<article class="guide-info guide-evidence"><h4>${esc(x.title)}</h4><p>${esc(x.detail)}</p>${x.url?`<a href="${escAttr(x.url)}" target="_blank" rel="noopener noreferrer">Xem nguồn ${ico('external',13)}</a>`:''}</article>`).join('')}</div>`;
- const sources=tab==='project'&&g.reference?`<div class="guide-sources"><strong>${ico('external',15)} ${esc(g.reference.title)}</strong><p>${esc(g.reference.description)}</p><div>${g.reference.links.map(l=>`<a href="${escAttr(l.url)}" target="_blank" rel="noopener noreferrer">${esc(l.title)} ${ico('external',12)}</a>`).join('')}</div></div>`:'';
- return `<section class="guide-section" id="course-guides"><div class="guide-heading"><div><span class="eyebrow">THÔNG TIN HỌC PHẦN</span><h2>Cẩm nang học phần</h2><p>Mở mục cần xem, không phải đọc hết.</p></div></div><div class="guide-tabs" role="tablist" aria-label="Nội dung cẩm nang">${sections.map(([id,name,ic])=>`<button role="tab" aria-selected="${tab===id}" class="guide-tab ${tab===id?'selected':''}" data-action="guide-tab" data-tab="${id}">${ico(ic,16)} ${name}</button>`).join('')}</div><div class="guide-content" role="tabpanel">${content}${sources}<p class="guide-warning">${ico('info',16)} Tỷ trọng và lịch thi chỉ được xác nhận qua LMS/đề cương lớp đang học.</p></div></section>`;
+/** Router, sự kiện và gọi API. Giao diện nằm ở views.js, trạng thái ở store.js. */
+import {getNode, nodesOf} from './data.js';
+import {followers, missingPrereqs} from './learning-path.js';
+import {local, state, persist, courseIds, nodeIds, unlocked, mastered, isSaved, hasEmpathy, exportPayload, importPayload} from './store.js';
+import {shell, homePage, coursePage, nodePage, communityPage, myPage, helpPage, notFound, topicOptions} from './views.js';
+
+const APP = document.getElementById('app');
+const calm = () => typeof window.matchMedia === 'function' && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+const scrollTo = id => document.getElementById(id)?.scrollIntoView({behavior: calm() ? 'auto' : 'smooth', block: 'start'});
+
+/* ---------- Hiển thị ---------- */
+
+function currentPage() {
+  const [route, id] = state.segments;
+  if (route === 'home' || route === 'courses') return homePage();
+  if (route === 'course' && courseIds.has(id)) return coursePage(id);
+  if (route === 'node' && nodeIds.has(id)) return nodePage(id);
+  return (new Map([['community', communityPage], ['my', myPage], ['help', helpPage]]).get(route) || notFound)();
 }
 
-function roadmapNode(n){
- const status=getStatus(n.id)||'';
- const prereq=n.deps.map(id=>getNode(id)?.title).filter(Boolean);
- const label=status?statusLabel(n.id):'Chưa học';
- return `<button type="button" class="roadmap-card ${status?'status-'+status:''}" data-action="navigate" data-path="node/${n.id}" data-map-node="${n.id}" aria-label="Mở chủ đề ${escAttr(n.title)}. ${escAttr(label)}" title="${escAttr(prereq.length?'Học trước: '+prereq.join(', '):'Có thể bắt đầu từ đây')}"><span class="roadmap-card-top"><span class="roadmap-status ${status}"><i></i>${esc(label)}</span>${ico('arrow',14)}</span><strong>${esc(n.title)}</strong><small class="roadmap-prereq">${prereq.length?`Học sau: ${esc(prereq.join(' · '))}`:'Điểm bắt đầu'}</small></button>`;
+function render(keepScroll = true) {
+  const top = keepScroll ? window.scrollY : 0;
+  const bits = (location.hash || '#/home').replace(/^#\/?/, '').split('/').filter(Boolean);
+  state.segments = bits.length ? bits : ['home'];
+  state.route = state.segments[0];
+  APP.innerHTML = shell(currentPage());
+  document.body.style.overflow = state.modal ? 'hidden' : '';
+  requestAnimationFrame(() => { drawEdges(); if (keepScroll) window.scrollTo(0, top); });
 }
-function coursePage(id){
- const course=getCourse(id);if(!course)return notFound();
- const sub=nodesOf(id);
- const groups=[0,1,2,3].map(stage=>({stage,list:sub.filter(n=>n.stage===stage)})).filter(g=>g.list.length);
- const completed=sub.filter(n=>getStatus(n.id)==='clear').length;
- return `<button class="text-link back-link" data-action="navigate" data-path="courses">${ico('back',15)} Môn học</button><section class="course-overview"><div class="course-overview-icon" style="background:${course.soft};color:${course.color}">${ico(course.icon,27)}</div><div><span class="eyebrow">${esc(course.code)}</span><h1>${esc(course.name)}</h1></div><span class="tiny-label demo-label">Bản mẫu</span></section>
- <div class="map-guide"><div><h2 class="section-title">Bản đồ kiến thức</h2><p>Học theo các chặng gợi ý, hoặc chọn bất kỳ chủ đề nào.</p></div><span class="roadmap-progress">${ico('check',14)} ${completed}/${sub.length} đã thông suốt</span></div>
- <div class="roadmap-panel" id="knowledge-map" aria-label="Sơ đồ quan hệ kiến thức"><svg class="roadmap-edges" aria-hidden="true"></svg><div class="roadmap-track">${groups.map((group,i)=>`<section class="roadmap-stage"><div class="roadmap-stage-head"><span class="roadmap-stage-number">${String(i+1).padStart(2,'0')}</span><div><h3>${esc(stages[group.stage])}</h3><small>${group.list.length} chủ đề</small></div>${i<groups.length-1?`<span class="roadmap-stage-arrow" aria-hidden="true">${ico('arrow',16)}</span>`:''}</div><div class="roadmap-stage-nodes">${group.list.map(roadmapNode).join('')}</div></section>`).join('')}</div><div class="roadmap-caption" id="roadmap-caption" aria-live="off">${ico('info',14)} <span>Node màu xanh = Đã thông suốt. Nhấn một Node để mở bài học; “Học sau” là kiến thức tiên quyết.</span></div></div>
- <section class="guide-collapsible ${state.guideOpen?'is-open':''}"><button type="button" class="guide-opener" data-action="guide-toggle" aria-expanded="${state.guideOpen}"><span class="guide-opener-icon">${ico('layers',22)}</span><span class="guide-opener-copy"><strong>Bài tập lớn, review giảng viên & kiểm tra</strong><small>Nguồn công khai — mở khi cần</small></span>${ico(state.guideOpen?'down':'chevron',18)}</button>${state.guideOpen?guidePanel(id):''}</section>`;
+
+function notify(text, bad = false) {
+  const host = document.querySelector('.toast-stack');
+  if (!host) return;
+  const el = document.createElement('div');
+  el.className = 'toast' + (bad ? ' is-error' : '');
+  el.textContent = text;
+  host.append(el);
+  setTimeout(() => el.remove(), 4200);
 }
-function resourceCard(r,primary=false){return `<a class="resource-card ${primary?'resource-primary':''}" target="_blank" rel="noopener noreferrer" href="${escAttr(r.url)}"><span class="resource-icon">${ico('book',18)}</span><span><strong>${esc(r.title)}</strong><small>${esc(r.kind)} · ${primary?'Nguồn ưu tiên do nhóm biên tập chọn':'Nguồn tham khảo thêm'}</small></span>${ico('external',15)}</a>`;}
-function questionCard(q,showNode=false){const node=getNode(q.nodeId);const open=state.expanded.has(q.id),replies=state.qa.replies.filter(r=>r.questionId===q.id);const voted=hasEmpathy('question',q.id);const selfNode=showNode?(node?`<button class="mini-btn minimal" data-action="navigate" data-path="node/${node.id}">${ico('chain',13)} ${esc(node.title)}</button>`:`<span class="mini-btn minimal">${esc(getCourse(q.courseId)?.name||'Chưa phân loại')}</span>`):'';return `<article class="question-card"><div class="q-top"><span class="q-avatar">🐝</span><span class="q-alias">${esc(q.alias)}</span><span>· ${formatDate(q.createdAt)}</span>${q.demo?'<span class="q-demo">Minh họa</span>':''}</div><h3>${esc(q.title||'Câu hỏi chưa có tiêu đề')}</h3>${q.body?`<p>${esc(q.body)}</p>`:''}<div class="q-bottom"><button class="mini-btn ${voted?'voted':''}" ${voted?'disabled':''} data-action="empathy" data-type="question" data-id="${q.id}">${ico('heart',14)} ${voted?'Bạn cũng đang kẹt':'Tôi cũng đang kẹt'} · ${q.empathyCount||0}</button><button class="mini-btn minimal" data-action="toggle-answers" data-id="${q.id}">${ico('message',14)} ${replies.length} phản hồi ${ico(open?'down':'chevron',13)}</button>${selfNode}<button class="mini-btn minimal" title="Báo cáo nội dung" data-action="report" data-id="${q.id}">${ico('flag',13)}</button></div>${open?`<div class="reply-panel">${replies.length?replies.map(r=>`<div class="reply"><strong>${esc(r.alias)}</strong><span style="font-size:9px;color:#aab5b8"> · ${formatDate(r.createdAt)}</span><p>${esc(r.body)}</p></div>`).join(''):`<p style="font-size:10px;color:#99a9a4;margin:0 0 12px">Chưa có phản hồi. Một lời giải thích của bạn có thể giúp rất nhiều người.</p>`}<button class="btn btn-soft" data-action="reply" data-id="${q.id}" data-node="${node?.id||''}">${ico('send',14)} Viết phản hồi</button></div>`:''}</article>`;}
-function formatDate(s){const time=Date.parse(s);if(!Number.isFinite(time))return '';return new Intl.DateTimeFormat('vi-VN',{day:'2-digit',month:'2-digit',year:'numeric'}).format(new Date(time));}
-function nodePage(id){
- const n=getNode(id);if(!n)return notFound();
- const c=getCourse(n.courseId),questions=state.qa.questions.filter(q=>q.nodeId===n.id);
- const selected=getStatus(n.id),voted=hasEmpathy('node',n.id);
- const statusOptions=[['explore','Đang khám phá','compass'],['stuck','Cần gỡ rối','help'],['clear','Đã thông suốt','check']];
- const index=Math.max(0,Math.min(n.flash.length-1,state.flashIndex[id]||0)),flash=n.flash[index];
- const shownQuestions=state.qaExpanded?questions:questions.slice(0,2);
- const numbered=(no,name,icon,body,extra='')=>`<section class="node-step" ${extra}><div class="node-step-title"><span class="node-step-num">${no}</span><h2>${ico(icon,18)} ${name}</h2></div>${body}</section>`;
- const prereq=n.deps.length?`<div class="node-prerequisites"><span>${ico('chain',14)} Học trước:</span>${n.deps.map(dep=>{const p=getNode(dep);return p?`<button type="button" data-action="navigate" data-path="node/${p.id}">${esc(p.title)} ${ico('arrow',12)}</button>`:''}).join('')}</div>`:'';
- const resources=`<div class="resources">${n.resources.slice(0,1).map(r=>resourceCard(r,true)).join('')}</div>${n.resources.length>1?`<details class="resource-extra"><summary>Xem thêm ${n.resources.length-1} nguồn khác ${ico('chevron',14)}</summary><div class="resources">${n.resources.slice(1).map(r=>resourceCard(r)).join('')}</div></details>`:''}<p class="node-source-note">Tài liệu do nhóm biên tập tuyển chọn cho bản MVP; chưa phải tài liệu được giảng viên HUST xác nhận.</p>`;
- const flashBody=`<div class="flash-header"><span>Câu ${index+1}/${n.flash.length}</span></div><div class="flash-card"><p class="flash-q">${esc(flash.q)}</p>${local.answers[n.id]?.includes(index)?`<div class="answer-box"><strong>Giải thích</strong>${esc(flash.a)}</div><button class="text-link" data-action="quiz-toggle" data-id="${n.id}" data-index="${index}">Ẩn giải thích</button>`:`<button class="btn btn-outline" data-action="quiz-toggle" data-id="${n.id}" data-index="${index}">Xem giải thích ${ico('arrow',14)}</button>`}<div class="flash-controls"><button type="button" class="btn btn-ghost" data-action="flash-step" data-id="${n.id}" data-step="-1" ${index===0?'disabled':''}>${ico('back',14)} Trước</button><button type="button" class="btn btn-soft" data-action="flash-step" data-id="${n.id}" data-step="1" ${index===n.flash.length-1?'disabled':''}>Tiếp ${ico('arrow',14)}</button></div></div>`;
- const qaBody=`<div class="qa-title-row"><p class="node-step-help">${questions.length} câu hỏi liên quan trong cộng đồng</p><button class="btn btn-outline" data-action="ask" data-node="${n.id}">${ico('plus',15)} Đặt câu hỏi</button></div>${state.qaError?offlineNote():''}${questions.length?`<div class="qa-list">${shownQuestions.map(q=>questionCard(q)).join('')}</div>${questions.length>2?`<button class="text-link qa-more" data-action="qa-show-more">${state.qaExpanded?'Thu gọn':`Xem tất cả ${questions.length} câu hỏi`} ${ico('arrow',14)}</button>`:''}`:`<div class="empty node-empty">${ico('message',23)}<strong>Chưa có câu hỏi ở chủ đề này</strong><p>Bạn có thể đặt câu hỏi ẩn danh đầu tiên.</p></div>`}<div class="node-empathy-inline"><button class="empathy-btn ${voted?'has-voted':''}" data-action="empathy" data-type="node" data-id="${n.id}" ${voted?'disabled':''}>${ico('heart',18)}<span><strong>${voted?'Đã ghi nhận':'Tôi cũng đang kẹt ở đây'}</strong><small>${empathyCount('node',n.id)} người đồng cảm</small></span></button></div>`;
- const statusBody=`<p class="node-step-help">Tự đánh giá sau khi học, không tính điểm. Chọn “Đã thông suốt” để Node đổi sang màu xanh trên bản đồ.</p><div class="status-compact node-status-options">${statusOptions.map(([value,name,ic])=>`<button type="button" class="status-choice ${value} ${selected===value?'selected':''}" data-action="set-status" data-id="${n.id}" data-status="${value}" aria-pressed="${selected===value}">${ico(ic,18)}<strong>${name}</strong></button>`).join('')}</div>${selected==='clear'?`<p class="status-confirm">${ico('check',15)} Chủ đề này đã được đánh dấu thông suốt. Quay lại bản đồ để xem màu xanh.</p>`:''}`;
- return `<button class="text-link back-link" data-action="navigate" data-path="course/${c.id}">${ico('back',15)} Bản đồ ${esc(c.name)}</button><article class="panel node-learning-card"><div class="node-heading"><div><span class="eyebrow">${esc(c.code)} · Chủ đề ${n.stage+1}</span><h1>${esc(n.title)}</h1></div><button class="icon-btn" aria-label="${isSaved(n.id)?'Bỏ lưu':'Lưu'} chủ đề" title="${isSaved(n.id)?'Bỏ lưu':'Lưu'}" data-action="save" data-id="${n.id}">${ico('bookmark',19)}</button></div><p class="node-intro">6 bước ngắn gọn để hiểu và tự kiểm tra kiến thức.</p>
- ${numbered('01','Tóm tắt khái niệm','book',`<p class="node-summary">${esc(n.summary)}</p>${prereq}`)}
- ${numbered('02','Tài liệu tham khảo chọn lọc','external',resources)}
- ${numbered('03','Cảnh báo bẫy','alert',`<div class="pitfall-box">${ico('alert',18)}<p>${esc(n.pitfall)}</p></div>`)}
- ${numbered('04','Flash-check','lightbulb',flashBody)}
- ${numbered('05','Câu hỏi','message',qaBody,'id="node-qa"')}
- ${numbered('06','Đánh giá đã hiểu chưa?','check',statusBody)}
- </article>`;
-}
-function offlineNote(){return `<div class="notice">${ico('info',16)}<span>Không kết nối được kho hỏi đáp. Dữ liệu câu hỏi mẫu vẫn được hiển thị; gửi bài và đồng cảm cần mạng và dịch vụ lưu trữ đang hoạt động. <button class="text-link" data-action="retry" style="padding:0">Thử lại</button></span></div>`;}
-function communityPage(){const q=state.communitySearch.toLowerCase().trim();const questions=state.qa.questions.filter(x=>(state.communityFilter==='all'||(getNode(x.nodeId)?.courseId||x.courseId)===state.communityFilter)&&[x.title,x.body,getNode(x.nodeId)?.title,getCourse(x.courseId)?.name].join(' ').toLowerCase().includes(q));return `${title('HỎI ĐÁP','Góc gỡ rối','Xem câu hỏi của người khác hoặc chọn một chủ đề để hỏi ẩn danh.')}${state.qaError?offlineNote():''}<div class="community-actions"><button class="btn btn-primary" data-action="ask">${ico('plus',16)} Đặt câu hỏi mới</button></div><div class="tools-row"><label class="searchbox">${ico('search',17)}<input id="qa-search" type="search" placeholder="Tìm câu hỏi..." value="${escAttr(state.communitySearch)}" aria-label="Tìm câu hỏi"></label><div class="filter-pills"><button class="pill ${state.communityFilter==='all'?'active':''}" data-action="qa-filter" data-value="all">Tất cả</button>${courses.map(c=>`<button class="pill ${state.communityFilter===c.id?'active':''}" data-action="qa-filter" data-value="${c.id}">${esc(c.name)}</button>`).join('')}</div></div><div class="community-list">${questions.length?questions.map(q=>questionCard(q,true)).join(''):`<div class="empty">${ico('message',28)}<strong>Chưa có câu hỏi phù hợp</strong><button class="btn btn-outline" data-action="ask">Đặt câu hỏi</button></div>`}</div>`;}
-function myPage(){const saved=local.saved.map(getNode).filter(Boolean);const marked=nodes.filter(x=>getStatus(x.id));const ordered=[...new Set([...saved,...marked])].sort((a,b)=>Number(isSaved(b.id))-Number(isSaved(a.id)));return `${title('CỦA TÔI','Kiến thức đã lưu','Tiếp tục những chủ đề bạn đã đánh dấu.') }<div class="progress-mini"><span>${ico('compass',16)} ${countStatus('explore')} đang học</span><span>${ico('help',16)} ${countStatus('stuck')} cần hỗ trợ</span><span>${ico('check',16)} ${countStatus('clear')} đã hiểu</span></div>${ordered.length?`<div class="my-list">${ordered.map(n=>`<div class="my-node"><div class="color-line" style="background:${({explore:'#edc175',stuck:'#df9b93',clear:'#7ec5a3'})[getStatus(n.id)]||'#a4bdb0'}"></div><div><h3>${esc(n.title)} ${isSaved(n.id)?'· ★':''}</h3><p>${esc(getCourse(n.courseId)?.name)} · ${statusLabel(n.id)}</p></div><button class="btn btn-outline" data-action="navigate" data-path="node/${n.id}">Mở ${ico('arrow',13)}</button></div>`).join('')}</div>`:`<div class="empty">${ico('bookmark',28)}<strong>Bạn chưa lưu chủ đề nào</strong><button class="btn btn-primary" data-action="navigate" data-path="courses">Khám phá môn học</button></div>`}<details class="profile-details"><summary>Xuất hoặc nhập dữ liệu học tập</summary><p>Tiến trình của bạn chỉ lưu trên trình duyệt này.</p><div class="profile-actions"><button class="btn btn-outline" data-action="export">${ico('bookmark',15)} Xuất dữ liệu</button><button class="btn btn-ghost" data-action="import">${ico('refresh',15)} Nhập dữ liệu</button><input type="file" id="import-input" accept="application/json" hidden></div></details>`;}
-function helpPage(){return `${title('HỖ TRỢ & MINH BẠCH','Kizuna hoạt động thế nào?','Một MVP để nhóm thử nghiệm giải pháp cùng sinh viên. Chúng mình ưu tiên cách học linh hoạt và quyền riêng tư.') }<div class="card-split"><div class="help-block"><h3>01 · Bản đồ kiến thức</h3><p>Các Node chia một môn học thành những điểm nhỏ, thể hiện quan hệ cần hiểu trước. Bạn được phép bắt đầu từ bất kỳ điểm nào, không có lộ trình cứng.</p></div><div class="help-block"><h3>02 · Flash-check không điểm số</h3><p>Tự trả lời câu hỏi, mở lời giải thích khi cần và đánh dấu trạng thái “Đang khám phá”, “Cần gỡ rối” hoặc “Đã thông suốt”.</p></div><div class="help-block"><h3>03 · Hỏi đáp ẩn danh</h3><p>Khi gửi câu hỏi hoặc phản hồi, hệ thống tự tạo một biệt danh. Người xem không thấy tên thật; các bài đăng là công khai.</p></div><div class="help-block"><h3>04 · Đồng cảm đúng chỗ</h3><p>Chọn “Tôi cũng đang kẹt” ở Node hoặc câu hỏi. Mỗi thiết bị chỉ được tính một lần trong bản MVP, và câu hỏi được ưu tiên theo số lượt đồng cảm.</p></div></div><div class="notice" style="margin-top:24px">${ico('info',18)}<span><strong>Giới hạn của bản thử nghiệm:</strong> Kizuna chưa có đăng nhập, đồng bộ trạng thái học giữa thiết bị hoặc cơ chế xác minh mentor. Nội dung Node là minh họa; học liệu công khai không đồng nghĩa đã được giảng viên HUST kiểm chứng. Các câu hỏi/đáp án được người dùng gửi công khai và chưa có kiểm duyệt chủ động. Không chia sẻ thông tin cá nhân nhạy cảm.</span></div><section class="panel" style="max-width:700px;margin-top:23px"><h2 class="section-title">Góp ý để Kizuna tốt hơn</h2><p class="page-desc" style="margin-bottom:18px">Phản hồi của bạn giúp nhóm chuẩn bị cho phỏng vấn giải pháp và quyết định điều gì cần cải thiện. Không cần tên thật.</p><form id="feedback-form"><div class="form-field"><label for="feedback-rating">Trải nghiệm sử dụng của bạn</label><select class="field" id="feedback-rating" name="rating" required><option value="">Chọn một mức</option><option value="dễ dùng">Dễ dùng</option><option value="bình thường">Bình thường</option><option value="khó dùng">Khó dùng</option></select></div><div class="form-field"><label for="feedback-text">Bạn muốn cải thiện điều gì?</label><textarea class="field textarea" id="feedback-text" name="text" minlength="8" maxlength="1200" required placeholder="Mình dùng ở tình huống..., mình thấy phần... giúp ích/chưa rõ vì..."></textarea></div><button type="submit" class="btn btn-primary" ${state.busy?'disabled':''}>${ico('send',15)} Gửi góp ý ẩn danh</button></form></section><section class="panel" style="max-width:700px;margin-top:16px"><h2 class="section-title">Hồ sơ trên thiết bị này</h2><p class="page-desc">Tên hiển thị chỉ xuất hiện ở sidebar, không đi kèm bài viết ẩn danh.</p><button class="btn btn-outline" data-action="profile">${ico('pencil',15)} Đổi tên hiển thị</button></section>`;}
-function notFound(){return `<div class="empty" style="margin-top:35px">${ico('compass',32)}<strong>Chưa tìm thấy trang này</strong><p>Đường dẫn có thể đã thay đổi. Hãy quay về bản đồ học tập.</p><button class="btn btn-primary" data-action="navigate" data-path="home">Về trang chủ</button></div>`;}
-function modalTemplate(){if(!state.modal)return '';const m=state.modal;let inside='';if(m.type==='ask'){
-  const node=getNode(m.nodeId);
-  const courseId=node?.courseId||(courseIds.has(m.courseId)?m.courseId:'');
-  const choiceFields=node
-   ?`<p class="ask-context">${esc(getCourse(node.courseId)?.name)} · <strong>${esc(node.title)}</strong></p><input type="hidden" name="nodeId" value="${escAttr(node.id)}">`
-   :`<div class="ask-choice-grid"><div class="form-field"><label for="ask-course">Môn học</label><select class="field" name="courseId" id="ask-course"><option value="">Chọn môn học</option>${courses.map(c=>`<option value="${escAttr(c.id)}" ${c.id===courseId?'selected':''}>${esc(c.name)}</option>`).join('')}</select></div><div class="form-field"><label for="ask-node">Chủ đề</label><select class="field" name="nodeId" id="ask-node" ${courseId?'':'disabled'}><option value="">Chọn chủ đề</option>${courseId?nodesOf(courseId).map(n=>`<option value="${escAttr(n.id)}">${esc(n.title)}</option>`).join(''):''}</select></div></div>`;
-  inside=`<h2>Đặt câu hỏi ẩn danh</h2><p>Mọi mục đều không bắt buộc. Bấm Gửi để đăng câu hỏi ẩn danh.</p><form id="ask-form">${choiceFields}<div class="form-field"><label for="ask-title">Bạn đang vướng ở điều gì?</label><input class="field" name="title" id="ask-title" maxlength="120" placeholder="Ví dụ: Vì sao recv() không nhận đủ byte?"></div><div class="form-field"><label for="ask-body">Bạn đã thử gì? Điều gì vẫn chưa rõ?</label><textarea class="field textarea" name="body" id="ask-body" maxlength="1500" placeholder="Mô tả tình huống cụ thể, ví dụ hoặc phần bạn chưa hiểu..."></textarea></div><p class="form-note">${ico('shield',16)} Bài đăng công khai dưới biệt danh ngẫu nhiên. Không gửi tên thật, email, mã sinh viên hoặc thông tin nhạy cảm.</p><div class="modal-actions"><button class="btn btn-primary" type="submit" ${state.busy?'disabled':''}>${ico('send',15)} Gửi câu hỏi</button></div></form>`;
- }else if(m.type==='reply'){
- const question=state.qa.questions.find(q=>q.id===m.questionId);inside=`<h2>Góp một lời giải thích</h2><p>Phản hồi ẩn danh cho: <strong>${esc(question?.title||'Câu hỏi')}</strong></p><form id="reply-form"><div class="form-field"><label for="reply-body">Giải thích hoặc dẫn nguồn của bạn</label><textarea class="field textarea" name="body" id="reply-body" minlength="8" maxlength="1600" required placeholder="Mình hiểu như sau... / Bạn có thể thử..."></textarea></div><p class="form-note">${ico('info',16)} Chỉ chia sẻ điều bạn có cơ sở. Nếu chưa chắc, hãy nói rõ để người đọc tự đối chiếu.</p><div class="modal-actions"><button type="button" class="btn btn-ghost" data-action="close-modal">Hủy</button><button type="submit" class="btn btn-primary" ${state.busy?'disabled':''}>Gửi phản hồi ${ico('arrow',15)}</button></div></form>`;
- }else if(m.type==='report'){
- inside=`<h2>Báo cáo nội dung</h2><p>Báo cáo giúp nhóm nhận biết nội dung cần xem lại. MVP chưa có kiểm duyệt tự động hoặc thời gian phản hồi cam kết.</p><form id="report-form"><div class="form-field"><label for="report-reason">Vấn đề bạn nhận thấy</label><textarea class="field textarea" name="reason" id="report-reason" minlength="8" maxlength="300" required placeholder="Ví dụ: Nội dung sai kiến thức, thiếu tôn trọng, lộ thông tin cá nhân..."></textarea></div><div class="modal-actions"><button type="button" class="btn btn-ghost" data-action="close-modal">Hủy</button><button type="submit" class="btn btn-primary">Gửi báo cáo</button></div></form>`;
- }else if(m.type==='profile'){
- inside=`<h2>Chỉnh hồ sơ cá nhân</h2><p>Tên này chỉ hiển thị trên thiết bị hiện tại. Các câu hỏi vẫn được gán biệt danh ẩn danh.</p><form id="profile-form"><div class="form-field"><label for="display-name">Tên hiển thị</label><input class="field" name="displayName" id="display-name" maxlength="35" required value="${escAttr(local.name)}"></div><div class="modal-actions"><button type="button" class="btn btn-ghost" data-action="close-modal">Hủy</button><button type="submit" class="btn btn-primary">Lưu hồ sơ</button></div></form>`;
- }
- return `<div class="overlay" data-action="overlay"><div class="modal" role="dialog" aria-modal="true" aria-label="${escAttr(m.type)}"><button class="modal-close" data-action="close-modal" aria-label="Đóng">${ico('x',18)}</button>${inside}</div></div>`;}
-function drawMapConnections(){
- const panel=document.getElementById('knowledge-map');if(!panel)return;
- const svg=panel.querySelector('.roadmap-edges');if(!svg)return;
- svg.replaceChildren();
- if(typeof window.matchMedia==='function'&&window.matchMedia('(max-width: 1099px)').matches)return;
- const rect=panel.getBoundingClientRect();
- if(!rect.width||!rect.height)return;
- svg.setAttribute('viewBox',`0 0 ${rect.width} ${rect.height}`);
- for(const n of nodesOf(state.segments[1])){
-  const target=panel.querySelector(`[data-map-node="${n.id}"]`);if(!target)continue;
-  for(const dep of n.deps){
-   const source=panel.querySelector(`[data-map-node="${dep}"]`);if(!source)continue;
-   const a=source.getBoundingClientRect(),b=target.getBoundingClientRect();
-   const sameStage=getNode(dep)?.stage===n.stage;
-   let x1,y1,x2,y2,d;
-   if(sameStage){
-    x1=a.left+a.width*.18-rect.left;y1=a.bottom-rect.top;
-    x2=b.left+b.width*.18-rect.left;y2=b.top-rect.top;
-    const mid=(y1+y2)/2;
-    d=`M ${x1} ${y1} C ${x1} ${mid} ${x2} ${mid} ${x2} ${y2}`;
-   }else{
-    x1=a.right-rect.left;y1=a.top+a.height/2-rect.top;
-    x2=b.left-rect.left;y2=b.top+b.height/2-rect.top;
-    const bend=Math.max(16,(x2-x1)*.57);
-    d=`M ${x1} ${y1} C ${x1+bend} ${y1} ${x2-bend} ${y2} ${x2} ${y2}`;
-   }
-   const path=document.createElementNS('http://www.w3.org/2000/svg','path');
-   path.setAttribute('d',d);
-   path.setAttribute('class','roadmap-edge');
-   path.dataset.from=dep;path.dataset.to=n.id;
-   svg.append(path);
+
+/** Vẽ sợi nối giữa các Node trên màn hình rộng. Sợi liền = đã thông suốt Node phía trước. */
+function drawEdges() {
+  const panel = document.getElementById('knowledge-map');
+  const svg = panel?.querySelector('.map-edges');
+  if (!svg) return;
+  svg.replaceChildren();
+  if (window.matchMedia?.('(max-width: 1023px)').matches) return;
+  const box = panel.getBoundingClientRect();
+  if (!box.width) return;
+  svg.setAttribute('viewBox', `0 0 ${box.width} ${box.height}`);
+  const rectOf = id => panel.querySelector(`[data-map-node="${id}"]`)?.getBoundingClientRect();
+  for (const node of nodesOf(state.segments[1])) for (const dep of node.deps) {
+    const a = rectOf(dep), b = rectOf(node.id);
+    if (!a || !b) continue;
+    let d;
+    if (getNode(dep).stage === node.stage) {
+      const x = a.left - box.left + 34;
+      d = `M${x} ${a.bottom - box.top}V${b.top - box.top}`;
+    } else {
+      const x1 = a.right - box.left, y1 = a.top + a.height / 2 - box.top, x2 = b.left - box.left, y2 = b.top + b.height / 2 - box.top;
+      const bend = Math.max(18, (x2 - x1) * .5);
+      d = `M${x1} ${y1}C${x1 + bend} ${y1} ${x2 - bend} ${y2} ${x2} ${y2}`;
+    }
+    const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+    path.setAttribute('d', d);
+    path.setAttribute('class', 'edge' + (mastered(dep) ? ' is-done' : ''));
+    path.dataset.from = dep;
+    path.dataset.to = node.id;
+    svg.append(path);
   }
- }
-}
-function focusRoadmapNode(id){
- const panel=document.getElementById('knowledge-map');if(!panel)return;
- const n=getNode(id),related=new Set(n?[...n.deps,...nodes.filter(x=>x.deps.includes(id)&&x.courseId===n.courseId).map(x=>x.id)]:[]);
- for(const card of panel.querySelectorAll('[data-map-node]')){
-  card.classList.toggle('is-selected',!!n&&card.dataset.mapNode===id);
-  card.classList.toggle('is-related',!!n&&related.has(card.dataset.mapNode));
-  card.classList.toggle('is-muted',!!n&&card.dataset.mapNode!==id&&!related.has(card.dataset.mapNode));
- }
- for(const path of panel.querySelectorAll('.roadmap-edge'))path.classList.toggle('is-highlighted',!!n&&(path.dataset.to===id||path.dataset.from===id));
- const caption=panel.querySelector('#roadmap-caption span');if(!caption)return;
- if(!n){caption.textContent='Chọn thẻ để mở bài học. Dòng “Học sau” cho biết kiến thức cần học trước.';return;}
- const before=n.deps.map(v=>getNode(v)?.title).filter(Boolean);
- const after=nodes.filter(x=>x.courseId===n.courseId&&x.deps.includes(n.id)).map(x=>x.title);
- caption.textContent=`${n.title} · ${before.length?'Học trước: '+before.join(', '):'Điểm bắt đầu'}${after.length?' · Tiếp theo: '+after.join(', '):''}`;
 }
 
-function selectGuide(tab,courseId=null){
- if(!['project','reviews','assessment'].includes(tab))return;
- state.guideTab=tab;state.guideOpen=true;
- if(courseId&&state.route!=='course'){state.pendingGuide=true;goto('course/'+courseId);return;}
- render(true);requestAnimationFrame(()=>document.getElementById('course-guides')?.scrollIntoView({behavior:'smooth',block:'start'}));
+/** Rê chuột hoặc focus vào một Node để làm nổi các sợi nối liên quan. */
+function highlight(id) {
+  for (const path of document.querySelectorAll?.('.map-edges .edge') || []) {
+    path.classList.toggle('is-hot', Boolean(id) && (path.dataset.from === id || path.dataset.to === id));
+  }
 }
-function render(preserve=false){const oldScroll=preserve?window.scrollY:0;const chunks=getPath();state.segments=chunks;state.route=chunks[0];const page=({home, courses:coursesPage, community:communityPage, my:myPage, help:helpPage})[state.route];const body=page?page():state.route==='course'&&courseIds.has(chunks[1])?coursePage(chunks[1]):state.route==='node'&&nodeIds.has(chunks[1])?nodePage(chunks[1]):notFound();APP.innerHTML=`<div class="app-shell">${sidebar()}<div class="main-wrap">${header()}<main class="content" id="main-content">${body}</main></div></div><div class="toast-stack" role="status" aria-live="polite"></div>${modalTemplate()}`;document.body.style.overflow=state.modal?'hidden':'';requestAnimationFrame(drawMapConnections);if(state.pendingGuide&&state.route==='course'){state.pendingGuide=false;requestAnimationFrame(()=>document.getElementById('course-guides')?.scrollIntoView({behavior:'smooth',block:'start'}));}if(preserve)requestAnimationFrame(()=>window.scrollTo(0,oldScroll));}
-function openModal(type,data={}){state.modal={type,...data};render(true);requestAnimationFrame(()=>document.querySelector('.modal select:not(:disabled),.modal input,.modal textarea')?.focus());}
-function closeModal(){state.modal=null;render(true);}
-async function doEmpathy(el){if(state.busy)return;if(state.qaError){notify('Chưa có kết nối để ghi nhận đồng cảm.',true);return;}const type=el.dataset.type,id=el.dataset.id;if(hasEmpathy(type,id))return;state.busy=true;el.disabled=true;try{await apiPost({action:'empathize',targetType:type,targetId:id});await loadCommunity(true);notify('Cảm ơn bạn. Bạn không phải người duy nhất đâu 🌿');}catch(e){notify(e.message,true);el.disabled=false;}finally{state.busy=false;}}
-function toggleAnswer(nodeId,index){const current=new Set(local.answers[nodeId]||[]);current.has(index)?current.delete(index):current.add(index);local.answers[nodeId]=[...current];persist();render(true);}
-function exportData(){const safe={version:1,exportedAt:new Date().toISOString(),name:local.name,progress:local.progress,saved:local.saved,answers:local.answers,guideChecks:local.guideChecks||{}};const blob=new Blob([JSON.stringify(safe,null,2)],{type:'application/json'});const url=URL.createObjectURL(blob);const link=document.createElement('a');link.href=url;link.download='kizuna-hanh-trinh.json';document.body.append(link);link.click();link.remove();setTimeout(()=>URL.revokeObjectURL(url),1000);notify('Đã xuất dữ liệu hành trình của bạn.');}
-async function importData(file){if(!file)return;try{if(file.size>100000)throw Error('Tệp dữ liệu quá lớn.');const payload=JSON.parse(await file.text());if(payload.version!==1||typeof payload.progress!=='object'||!Array.isArray(payload.saved))throw Error('Định dạng sao lưu không hợp lệ.');local.progress=Object.fromEntries(Object.entries(payload.progress).filter(([id,status])=>nodeIds.has(id)&&['explore','stuck','clear'].includes(status)));local.saved=payload.saved.filter(id=>nodeIds.has(id));local.answers=Object.fromEntries(Object.entries(payload.answers||{}).filter(([id,v])=>nodeIds.has(id)&&Array.isArray(v)).map(([id,v])=>[id,v.filter(x=>Number.isInteger(x)&&x>=0&&x<4)]));local.guideChecks=Object.fromEntries(Object.entries(payload.guideChecks||{}).filter(([k,v])=>typeof k==='string'&&k.length<=100&&typeof v==='boolean'));local.name=safeName(payload.name)||local.name;persist();render(true);notify('Đã nhập dữ liệu hành trình.');}catch(e){notify(e.message,true);}}
-function handleClick(ev){const el=ev.target.closest('[data-action]');if(!el)return;const action=el.dataset.action;
- if(action==='navigate'){goto(el.dataset.path);return;}
- if(action==='guide-focus'||action==='guide-tab'){selectGuide(el.dataset.tab);return;}
- if(action==='guide-toggle'){state.guideOpen=!state.guideOpen;render(true);return;}
- if(action==='flash-step'){const id=el.dataset.id;const len=getNode(id)?.flash?.length||1;state.flashIndex[id]=Math.max(0,Math.min(len-1,(state.flashIndex[id]||0)+Number(el.dataset.step||0)));render(true);return;}
- if(action==='qa-show-more'){state.qaExpanded=!state.qaExpanded;render(true);return;}
 
- if(action==='toggle-menu'){state.menu=!state.menu;render(true);return;}
- if(action==='close-menu'){state.menu=false;render(true);return;}
- if(action==='course-filter'){state.filter=el.dataset.value;render(true);return;}
- if(action==='qa-filter'){state.communityFilter=el.dataset.value;render(true);return;}
- if(action==='reset-courses'){state.filter='all';state.search='';render(true);return;}
- if(action==='save'){const id=el.dataset.id;local.saved=isSaved(id)?local.saved.filter(x=>x!==id):[...local.saved,id];persist();render(true);notify(isSaved(id)?'Đã lưu chủ đề.':'Đã bỏ lưu chủ đề.');return;}
- if(action==='set-status'){local.progress[el.dataset.id]=el.dataset.status;persist();render(true);notify('Đã lưu trạng thái của bạn. Không có điểm số nào được tính.');return;}
- if(action==='quiz-toggle'){toggleAnswer(el.dataset.id,Number(el.dataset.index));return;}
- if(action==='empathy'){doEmpathy(el);return;}
- if(action==='toggle-answers'){const id=el.dataset.id;state.expanded.has(id)?state.expanded.delete(id):state.expanded.add(id);render(true);return;}
- if(action==='ask'){openModal('ask',{nodeId:el.dataset.node||null,courseId:state.communityFilter});return;}
- if(action==='reply'){openModal('reply',{questionId:el.dataset.id,nodeId:el.dataset.node});return;}
- if(action==='report'){openModal('report',{questionId:el.dataset.id});return;}
- if(action==='profile'){openModal('profile');return;}
- if(action==='close-modal'||action==='overlay'&&ev.target===el){closeModal();return;}
- if(action==='retry'){loadCommunity();return;}
- if(action==='export'){exportData();return;}
- if(action==='import'){document.getElementById('import-input')?.click();}
-}
-async function handleSubmit(ev){const f=ev.target;if(!['ask-form','reply-form','report-form','profile-form','feedback-form','lecturer-review-form'].includes(f.id))return;ev.preventDefault();if(state.busy)return;const form=new FormData(f);
- if(f.id==='profile-form'){const name=safeName(form.get('displayName'));if(name.length<2)return notify('Tên cần có từ 2 ký tự.',true);local.name=name;persist();closeModal();notify('Đã đổi tên trên thiết bị này.');return;}
- if(state.qaError){notify('Cần kết nối cộng đồng để gửi dữ liệu. Vui lòng thử lại.',true);return;}
- state.busy=true;f.querySelector('button[type="submit"]').disabled=true;
- try{if(f.id==='ask-form'){const nodeId=state.modal.nodeId||String(form.get('nodeId')||'');const courseId=String(form.get('courseId')||getNode(nodeId)?.courseId||'');if(nodeId&&!getNode(nodeId))throw Error('Chủ đề không hợp lệ.');await apiPost({action:'ask',nodeId,courseId,title:form.get('title')||'',body:form.get('body')||''});state.modal=null;if(state.route==='community'){state.communityFilter='all';state.communitySearch='';}await loadCommunity(true);notify('Câu hỏi đã được đăng với biệt danh ngẫu nhiên.');document.getElementById(state.route==='community'?'main-content':'node-qa')?.scrollIntoView({behavior:'smooth',block:'start'});}
- else if(f.id==='reply-form'){const {questionId,nodeId}=state.modal;await apiPost({action:'reply',questionId,nodeId,body:form.get('body')});state.expanded.add(questionId);state.modal=null;await loadCommunity(true);notify('Phản hồi đã được đăng ẩn danh.');}
- else if(f.id==='report-form'){await apiPost({action:'report',questionId:state.modal.questionId,reason:form.get('reason')});state.modal=null;render(true);notify('Đã ghi nhận báo cáo. Nhóm cần kiểm tra thủ công.');}
- else if(f.id==='feedback-form'){await apiPost({action:'feedback',rating:form.get('rating'),text:form.get('text')});f.reset();notify('Cảm ơn bạn đã góp ý cho Kizuna!');}
- else if(f.id==='lecturer-review-form'){await apiPost({action:'lecturerReview',courseId:form.get('courseId'),lecturer:form.get('lecturer'),term:form.get('term'),rating:form.get('rating'),text:form.get('text')});f.reset();notify('Đã nhận review. Nội dung được gửi về nhóm biên tập và chưa công khai.');}}
- catch(e){notify(e.message,true);f.querySelector('button[type="submit"]')?.removeAttribute('disabled');}finally{state.busy=false;}
-}
-function handleInput(ev){if(ev.target.id==='course-search'||ev.target.id==='qa-search'){const id=ev.target.id,position=ev.target.selectionStart;id==='course-search'?state.search=ev.target.value:state.communitySearch=ev.target.value;render(true);const input=document.getElementById(id);if(input){input.focus();try{input.setSelectionRange(position,position);}catch{}}}}
-window.addEventListener('resize',drawMapConnections);window.addEventListener('hashchange',()=>{state.modal=null;render();});document.addEventListener('click',handleClick);document.addEventListener('submit',handleSubmit);document.addEventListener('input',handleInput);document.addEventListener('change',e=>{if(e.target.id==='ask-course'){const topic=document.getElementById('ask-node');if(topic){const course=e.target.value;topic.innerHTML='<option value="">Chọn chủ đề</option>'+(courseIds.has(course)?nodesOf(course).map(n=>`<option value="${escAttr(n.id)}">${esc(n.title)}</option>`).join(''):'');topic.disabled=!courseIds.has(course);}}if(e.target.id==='import-input')importData(e.target.files?.[0]);if(e.target.matches('[data-guide-check]')){local.guideChecks||={};local.guideChecks[e.target.dataset.guideCheck]=e.target.checked;persist();}});document.addEventListener('keydown',e=>{if(e.key==='Escape'&&state.modal)closeModal();});
-persist();render();loadCommunity(true);
+/* ---------- API cộng đồng ---------- */
 
-// Highlight links on pointer hover or keyboard focus without adding map controls.
-document.addEventListener('pointerover',event=>{const card=event.target.closest?.('[data-map-node]');if(card)focusRoadmapNode(card.dataset.mapNode);});
-document.addEventListener('pointerout',event=>{const card=event.target.closest?.('[data-map-node]');if(card&&!card.contains(event.relatedTarget))focusRoadmapNode(null);});
-document.addEventListener('focusin',event=>{const card=event.target.closest?.('[data-map-node]');if(card)focusRoadmapNode(card.dataset.mapNode);});
-document.addEventListener('focusout',event=>{const card=event.target.closest?.('[data-map-node]');if(card&&!card.contains(event.relatedTarget))focusRoadmapNode(null);});
+async function apiPost(payload) {
+  const res = await fetch('/api/community', {method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({...payload, actorId: local.device})});
+  const data = await res.json().catch(() => ({error: 'Phản hồi không hợp lệ.'}));
+  if (!res.ok) throw new Error(data.error || 'Không thể thực hiện.');
+  return data;
+}
+
+async function loadCommunity(silent = false) {
+  try {
+    const res = await fetch('/api/community', {headers: {'x-kizuna-device': local.device}, cache: 'no-store'});
+    if (!res.ok) throw Error('offline');
+    const qa = await res.json();
+    if (!Array.isArray(qa.questions)) throw Error('invalid');
+    state.qa = qa;
+    state.qaError = false;
+  } catch {
+    state.qaError = true;
+  }
+  render();
+  if (state.qaError && !silent) notify('Chưa kết nối được cộng đồng.', true);
+}
+
+async function empathize(el) {
+  const {type, id} = el.dataset;
+  if (state.busy || hasEmpathy(type, id)) return;
+  if (state.qaError) return notify('Chưa kết nối được để ghi nhận.', true);
+  state.busy = true;
+  el.disabled = true;
+  try {
+    await apiPost({action: 'empathize', targetType: type, targetId: id});
+    await loadCommunity(true);
+  } catch (e) {
+    el.disabled = false;
+    notify(e.message, true);
+  } finally {
+    state.busy = false;
+  }
+}
+
+/* ---------- Thao tác học ---------- */
+
+function setStatus(id, status) {
+  if (!unlocked(id)) return;
+  const before = new Set(nodesOf(getNode(id).courseId).filter(n => unlocked(n.id)).map(n => n.id));
+  local.progress[id] = status;
+  persist();
+  render();
+  const opened = followers(id).filter(n => unlocked(n.id) && !before.has(n.id));
+  const closed = [...before].filter(other => !unlocked(other));
+  if (opened.length) notify(`Đã mở khóa: ${opened.map(n => n.title).join(' · ')}`);
+  else if (closed.length) notify(`${closed.length} chủ đề phía sau tạm khóa.`);
+}
+
+function explainLock(id) {
+  const missing = missingPrereqs(id, local.progress);
+  notify(`Hãy thông suốt trước: ${missing.map(n => n.title).join(' · ')}`);
+  for (const n of missing) {
+    const card = document.querySelector(`[data-map-node="${n.id}"]`);
+    if (!card) continue;
+    card.classList.add('is-needed');
+    setTimeout(() => card.classList.remove('is-needed'), 1800);
+  }
+}
+
+function exportData() {
+  const url = URL.createObjectURL(new Blob([JSON.stringify(exportPayload(), null, 2)], {type: 'application/json'}));
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'kizuna-tien-do.json';
+  a.click();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
+
+async function importData(file) {
+  if (!file) return;
+  try {
+    if (file.size > 100000) throw Error('Tệp quá lớn.');
+    importPayload(JSON.parse(await file.text()));
+    render();
+    notify('Đã nhập tiến độ.');
+  } catch (e) {
+    notify(e instanceof SyntaxError ? 'Tệp không đúng định dạng.' : e.message, true);
+  }
+}
+
+/* ---------- Sự kiện ---------- */
+
+function openModal(type, data = {}) {
+  state.modal = {type, ...data};
+  render();
+  requestAnimationFrame(() => document.querySelector('.modal input:not([type=hidden]),.modal textarea')?.focus());
+}
+const closeModal = () => { state.modal = null; render(); };
+const toggle = (set, key) => set.has(key) ? set.delete(key) : set.add(key);
+
+const actions = {
+  'locked': el => explainLock(el.dataset.id),
+  'set-status': el => setStatus(el.dataset.id, el.dataset.status),
+  'exam-term': el => { state.examTerm = el.dataset.term; render(); },
+  'exam-answer': el => { toggle(state.openAnswers, el.dataset.key); render(); },
+  'flash-step': el => {
+    const {id, step} = el.dataset, last = getNode(id).flash.length - 1;
+    state.flashIndex[id] = Math.max(0, Math.min(last, (state.flashIndex[id] || 0) + Number(step)));
+    render();
+  },
+  'quiz-toggle': el => {
+    const set = new Set(local.answers[el.dataset.id] || []);
+    toggle(set, Number(el.dataset.index));
+    local.answers[el.dataset.id] = [...set];
+    persist();
+    render();
+  },
+  'save': el => {
+    const {id} = el.dataset;
+    local.saved = isSaved(id) ? local.saved.filter(x => x !== id) : [...local.saved, id];
+    persist();
+    render();
+  },
+  'jump': el => scrollTo(el.dataset.target),
+  'skip': (el, ev) => { ev.preventDefault?.(); document.getElementById('main-content')?.focus(); },
+  'reset-courses': () => { state.search = ''; render(); },
+  'qa-filter': el => { state.communityFilter = el.dataset.value; render(); },
+  'qa-show-more': () => { state.qaExpanded = !state.qaExpanded; render(); },
+  'toggle-answers': el => { toggle(state.expanded, el.dataset.id); render(); },
+  'empathy': empathize,
+  'ask': el => openModal('ask', {nodeId: el.dataset.node || null, courseId: state.communityFilter}),
+  'reply': el => openModal('reply', {questionId: el.dataset.id, nodeId: el.dataset.node}),
+  'report': el => openModal('report', {questionId: el.dataset.id}),
+  'close-modal': closeModal,
+  'overlay': (el, ev) => { if (ev.target === el) closeModal(); },
+  'retry': () => loadCommunity(),
+  'export': exportData,
+  'import': () => document.getElementById('import-input')?.click()
+};
+
+const submits = {
+  'ask-form': async form => {
+    const nodeId = state.modal.nodeId || String(form.get('nodeId') || '');
+    const courseId = getNode(nodeId)?.courseId || String(form.get('courseId') || '');
+    await apiPost({action: 'ask', nodeId, courseId, title: form.get('title') || '', body: form.get('body') || ''});
+    state.modal = null;
+    if (state.route === 'community') { state.communityFilter = 'all'; state.communitySearch = ''; }
+    await loadCommunity(true);
+    notify('Đã đăng câu hỏi.');
+  },
+  'reply-form': async form => {
+    const {questionId, nodeId} = state.modal;
+    await apiPost({action: 'reply', questionId, nodeId, body: form.get('body')});
+    state.expanded.add(questionId);
+    state.modal = null;
+    await loadCommunity(true);
+    notify('Đã đăng phản hồi.');
+  },
+  'report-form': async form => {
+    await apiPost({action: 'report', questionId: state.modal.questionId, reason: form.get('reason')});
+    closeModal();
+    notify('Đã gửi báo cáo.');
+  },
+  'feedback-form': async (form, el) => {
+    await apiPost({action: 'feedback', rating: form.get('rating'), text: form.get('text')});
+    el.reset();
+    notify('Cảm ơn bạn đã góp ý.');
+  }
+};
+
+document.addEventListener('click', ev => {
+  const el = ev.target.closest('[data-action]');
+  if (el) actions[el.dataset.action]?.(el, ev);
+});
+
+document.addEventListener('submit', async ev => {
+  const el = ev.target, run = submits[el.id];
+  if (!run) return;
+  ev.preventDefault();
+  if (state.busy) return;
+  if (state.qaError) return notify('Chưa kết nối được cộng đồng. Hãy thử lại.', true);
+  const button = el.querySelector('button[type="submit"]');
+  state.busy = true;
+  if (button) button.disabled = true;
+  try {
+    await run(new FormData(el), el);
+  } catch (e) {
+    notify(e.message, true);
+  } finally {
+    state.busy = false;
+    if (button) button.disabled = false;
+  }
+});
+
+document.addEventListener('input', ev => {
+  const key = {'course-search': 'search', 'qa-search': 'communitySearch'}[ev.target.id];
+  if (!key) return;
+  const {id, value, selectionStart} = ev.target;
+  state[key] = value;
+  if (ev.isComposing) return; // không cắt ngang bộ gõ tiếng Việt
+  render();
+  const input = document.getElementById(id);
+  input?.focus();
+  try { input?.setSelectionRange(selectionStart, selectionStart); } catch { /* trình duyệt không hỗ trợ */ }
+});
+document.addEventListener('compositionend', ev => {
+  if (['course-search', 'qa-search'].includes(ev.target.id)) ev.target.dispatchEvent(new Event('input', {bubbles: true}));
+});
+
+document.addEventListener('change', ev => {
+  const el = ev.target;
+  if (el.id === 'ask-course') {
+    const topic = document.getElementById('ask-node');
+    if (topic) { topic.innerHTML = topicOptions(el.value); topic.disabled = !courseIds.has(el.value); }
+  } else if (el.id === 'import-input') {
+    importData(el.files?.[0]);
+  } else if (el.matches('[data-guide-check]')) {
+    local.guideChecks[el.dataset.guideCheck] = el.checked;
+    persist();
+  }
+});
+
+document.addEventListener('keydown', ev => { if (ev.key === 'Escape' && state.modal) closeModal(); });
+for (const [on, off] of [['pointerover', 'pointerout'], ['focusin', 'focusout']]) {
+  document.addEventListener(on, ev => { const card = ev.target.closest?.('[data-map-node]'); if (card) highlight(card.dataset.mapNode); });
+  document.addEventListener(off, ev => { if (ev.target.closest?.('[data-map-node]')) highlight(null); });
+}
+window.addEventListener('resize', drawEdges);
+window.addEventListener('hashchange', () => {
+  state.modal = null;
+  state.qaExpanded = false;
+  render(false);
+  window.scrollTo(0, 0);
+});
+
+persist();
+render();
+loadCommunity(true);
+document.fonts?.ready?.then(drawEdges);

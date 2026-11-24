@@ -54,17 +54,6 @@ test('blank and very short questions can be posted, read and replied to without 
  assert.equal((await service.snapshot('test_course_device_abcdefg12345')).questions.find(q=>q.id===courseOnly.id)?.courseId,'network');
 }));
 
-test('lecturer reviews are validated and held for moderation, not published to community',async()=>{
- const items={questions:[],replies:[],votes:[],feedback:[],reports:[],lecturerReviews:[]};
- const store={readItems:async kind=>items[kind]||[],writeItem:async(kind,id,item)=>{(items[kind]||=[]).push(item)}};
- const svc=createCommunityService(store);
- const actorId='private-review-user-123456789';
- await assert.rejects(svc.mutate({action:'lecturerReview',actorId,courseId:'network',lecturer:'A',rating:4,text:'Đánh giá quá ngắn'}),/Tên giảng viên|Nhập tên giảng viên/);
- const result=await svc.mutate({action:'lecturerReview',actorId,courseId:'network',lecturer:'Giảng viên minh họa',term:'2026.1',rating:4,text:'Cách giảng có các ví dụ socket rõ ràng, phần lab cần dành thêm thời gian.'});
- assert.equal(result.reviewStatus,'pending');
- assert.equal(items.lecturerReviews.length,1);
- assert.equal(items.lecturerReviews[0].published,false);
- const snapshot=await svc.snapshot(actorId);
- assert.equal('lecturerReviews' in snapshot,false);
- await assert.rejects(svc.mutate({action:'lecturerReview',actorId,courseId:'network',lecturer:'Giảng viên minh họa',rating:3,text:'Góp ý lần thứ hai trong thời gian quá gần để kiểm tra rate limiting.'}),/vừa gửi review/);
-});
+test('người dùng không gửi được review giảng viên qua API',async()=>demo(async service=>{
+ await assert.rejects(service.mutate({action:'lecturerReview',actorId:device,courseId:'network',lecturer:'Giảng viên',rating:4,text:'Một nhận xét đủ dài để vượt qua kiểm tra cũ.'}),/không được hỗ trợ/);
+}));
