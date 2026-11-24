@@ -81,3 +81,11 @@
 - Thông tin tỷ lệ điểm có nguồn ví dụ IT4062 (50/50 và đề cương cũ 30/70), IT3190 (slide 2025 40/60). Với IT4409 và IT4735 chưa tìm được tỷ trọng lớp hiện hành => không ghi con số giả.
 - Mã môn hiển thị IT4409, IT3190, IT4735 thay vì placeholder; dữ liệu Node vẫn minh họa.
 - Tham khảo nguồn gốc tại các liên kết HTTPS trong `course-evidence.js`.
+
+
+## MVP v1.5 (2026-11-24)
+- Bỏ chatbot mô phỏng khỏi tất cả tab và source.
+- Node đọc theo 6 mục: tóm tắt, nguồn tham khảo tuyển chọn, cảnh báo bẫy, Flash-check, hỏi đáp cộng đồng, tự đánh giá đã hiểu.
+- Bản đồ kiến thức bỏ gợi ý học tiếp; tô nền xanh Node đã thông suốt, bảo toàn tiến độ localStorage từ bản trước.
+- Môn IT4062 bổ sung DNS, truyền tệp và HTTP server; học liệu chỉ là nguồn tham khảo MVP, chưa được giảng viên xác nhận.
+- Cẩm nang còn Bài tập lớn, Review giảng viên & Chấm điểm, Kiểm tra. Review gửi ẩn danh về backend ở trạng thái chờ duyệt, không tự động công khai.

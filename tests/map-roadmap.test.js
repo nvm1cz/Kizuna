@@ -26,11 +26,12 @@ test('the new roadmap keeps all course nodes in four stages, with working direct
    const root=sub.find(n=>n.deps.length===0);
    assert.ok(app.innerHTML.includes(`data-path="node/${root.id}"`),`root recommended for ${c.id}`);
  }
- // Mark the root as understood, then the next available topic must be recommended.
+ // Mark a Node as understood; the map should highlight it in green without a next-step banner.
  location.hash='#/course/network';handlers['window:hashchange']();
  const click=(dataset)=>handlers.click({target:{closest:()=>({dataset})}});
  click({action:'set-status',id:'net-foundation',status:'clear'});
- assert.match(app.innerHTML,/GỢI Ý HỌC TIẾP/);
+ assert.doesNotMatch(app.innerHTML,/GỢI Ý HỌC TIẾP|roadmap-next-action/);
+ assert.match(app.innerHTML,/class="roadmap-card status-clear"[^>]+data-map-node="net-foundation"/);
  assert.match(app.innerHTML,/Luồng TCP &amp; vòng đời socket/);
  assert.ok(app.innerHTML.includes('data-map-node="net-practice"'));
  // No extra UI clutter injected into other screens.

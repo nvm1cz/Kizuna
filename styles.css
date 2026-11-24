@@ -295,3 +295,57 @@
 .guide-extra .guide-pair{margin-top:12px}
 @media(max-width:850px){.guide-tabs{grid-template-columns:repeat(3,minmax(0,1fr))}}
 @media(max-width:550px){.guide-tabs{grid-template-columns:repeat(2,minmax(0,1fr))}.guide-tab{justify-content:flex-start;font-size:10px;padding:10px 8px}.guide-content{padding:13px}.guide-evidence{overflow-wrap:anywhere}}
+
+/* v1.5: calm six-step Node reader and clear map completion states */
+.roadmap-card.status-clear{background:#e1f5e9;border:2px solid #409e71;border-left-width:4px;box-shadow:0 4px 15px rgba(35,126,77,.10)}
+.roadmap-card.status-clear strong{color:#165d43}
+.roadmap-card.status-clear .roadmap-status{color:#176b4b;font-weight:800}
+.roadmap-card.status-clear .roadmap-status i{background:#269762}
+.roadmap-card.status-clear .roadmap-card-top svg{color:#187a51}
+.roadmap-card.status-clear:hover,.roadmap-card.status-clear:focus-visible{border-color:#16724d;background:#d2f1df}
+.roadmap-card.status-stuck{background:#fff7f2;border-left:4px solid #dd9470}
+.roadmap-card.status-explore{background:#fffdf3;border-left:4px solid #e5bc64}
+.roadmap-progress{display:inline-flex;align-items:center;gap:5px;background:#e9f7ef;color:#26734e;padding:8px 12px;border-radius:100px;font-size:11px;font-weight:750;white-space:nowrap}
+.node-learning-card{max-width:880px;margin:0 auto 30px;padding:26px 34px}
+.node-intro{font-size:12px;color:#83968b;margin:0 0 16px;line-height:1.6}
+.node-step{border-top:1px solid #e7eee9;padding:24px 0 21px;scroll-margin-top:90px}
+.node-step:last-child{padding-bottom:0}
+.node-step-title{display:flex;align-items:center;gap:12px;margin-bottom:13px}
+.node-step-title h2{margin:0;display:flex;align-items:center;gap:8px;color:#2c5547;font-size:15px;font-weight:800;line-height:1.5}
+.node-step-num{background:#e6f4eb;color:#287b57;border-radius:9px;padding:6px;min-width:33px;height:33px;display:grid;place-items:center;font-family:'DM Sans',sans-serif;font-size:11px;font-weight:800}
+.node-step .node-summary{margin:0;color:#526d61;line-height:1.9}
+.node-step .node-prerequisites{margin-top:14px}
+.node-step .resources{display:grid;gap:9px}
+.node-step .resource-primary{border-color:#bfded0;background:#f7fcf9}
+.node-source-note{font-size:10px;color:#8aa096;line-height:1.7;margin:10px 0 0}
+.resource-extra{margin-top:10px}
+.resource-extra>summary{font-size:11px;font-weight:700;color:#418166;cursor:pointer;display:flex;gap:5px;align-items:center}
+.resource-extra[open] .resources{padding-top:10px}
+.node-step .pitfall-box{margin:0;display:flex;align-items:flex-start;gap:10px;background:#fff8e9;border:1px solid #f1e3bc;border-radius:12px;padding:14px 16px;color:#7b6334}
+.node-step .pitfall-box p{margin:0;font-size:12px;line-height:1.85}
+.node-step .flash-header{justify-content:flex-end;margin-bottom:6px}
+.node-step .flash-header span{font-size:11px}
+.node-step .flash-card{border-radius:13px}
+.node-step .qa-title-row{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px}
+.node-step-help{font-size:12px;color:#799085;line-height:1.7;margin:0 0 13px}
+.node-empty{padding:15px 0}
+.node-empathy-inline{display:flex;margin-top:12px}
+.node-empathy-inline .empathy-btn{width:auto;max-width:100%;padding:12px 15px;display:flex;gap:10px;align-items:center;border:1px solid #dce8e1;border-radius:10px;background:#f8fbf9}
+.node-empathy-inline .empathy-btn span{text-align:left}
+.node-empathy-inline .empathy-btn strong{font-size:11px}
+.node-empathy-inline .empathy-btn small{font-size:10px;display:block;margin-top:3px}
+.node-status-options{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.node-status-options .status-choice{min-width:0;display:flex;align-items:center;justify-content:center;gap:7px;border-radius:11px;min-height:49px;padding:10px 7px}
+.node-status-options .status-choice strong{font-size:11px}
+.node-status-options .status-choice.clear.selected{background:#dbf2e5;border-color:#45a474;color:#17603e}
+.status-confirm{font-size:11px;color:#25764f;display:flex;align-items:center;gap:8px;margin:13px 0 0}
+.review-and-grade{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:16px}
+.review-form-card,.guide-grade-list{min-width:0}
+.review-form-card form{display:grid;gap:10px}
+.review-form-card .form-field{margin:0}
+.review-form-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.review-form-card .textarea{min-height:95px}
+.review-form-card .guide-warning{font-size:10px;line-height:1.7}
+.guide-grade-list>h4{font-size:13px;color:#426e60;margin:4px 0 10px}
+.guide-grade-list>.guide-info{margin-bottom:10px}
+@media (max-width:760px){.node-learning-card{padding:17px 17px 20px}.node-step{padding:20px 0}.node-step-title h2{font-size:13px}.node-step-title{gap:8px}.node-status-options{grid-template-columns:1fr;gap:8px}.node-status-options .status-choice{justify-content:flex-start;padding:11px 14px}.review-and-grade{grid-template-columns:1fr}.guide-tabs{flex-wrap:wrap}.guide-tab{min-width:0}.review-form-grid{grid-template-columns:1fr}.roadmap-progress{white-space:normal}}

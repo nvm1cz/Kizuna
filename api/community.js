@@ -1,7 +1,7 @@
 import { list, put } from '@vercel/blob';
 import { createCommunityService } from '../lib/community.js';
 const ROOT='kizuna-mvp/v1/';
-const KINDS=new Set(['questions','replies','votes','feedback','reports']);
+const KINDS=new Set(['questions','replies','votes','feedback','reports','lecturerReviews']);
 const store={
  async readItems(kind){
   if(!KINDS.has(kind))return [];
