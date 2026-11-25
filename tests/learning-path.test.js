@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {nodes} from '../data.js';
-import {isUnlocked, isMastered, missingPrereqs, nextStepTo, followers} from '../learning-path.js';
+import {nodes} from '../public/js/content/courses.js';
+import {isUnlocked, isMastered, missingPrereqs, nextStepTo, followers} from '../public/js/core/learning-path.js';
 
 test('chỉ Node gốc mở khi chưa học gì', () => {
   for (const n of nodes) assert.equal(isUnlocked(n.id, {}), n.deps.length === 0, n.id);

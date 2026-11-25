@@ -1,0 +1,34 @@
+/* Trang Node */
+.node-layout { display: grid; grid-template-columns: 200px minmax(0, 760px); gap: 48px; justify-content: center; }
+.toc ol { position: sticky; top: 100px; display: grid; gap: 2px; border-left: 2px solid var(--line); }
+.toc button { width: 100%; padding: 8px 0 8px 18px; color: var(--muted); font-size: .95rem; }
+.toc button:hover { color: var(--brand); }
+.node { background: var(--panel); border: 1px solid var(--line); border-radius: 22px; padding: 38px 44px; }
+.node-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; }
+.node-step { padding-top: 36px; scroll-margin-top: 60px; }
+.node-step h2 { display: flex; align-items: center; gap: 12px; margin-bottom: 14px; font-size: 1.25rem; }
+.node-step h2 span { flex: none; width: 32px; height: 32px; display: grid; place-items: center; border-radius: 10px; background: var(--brand-soft); color: var(--brand); font-size: 1rem; }
+.summary { font-size: 1.125rem; line-height: 1.75; }
+.resource + .resource { margin-top: 12px; }
+.resource.is-main { background: var(--brand-soft); border-color: #cfd5fa; }
+.resource.is-main .paper-icon { background: #fff; }
+.pitfall { display: flex; gap: 14px; padding: 18px 20px; border-radius: var(--r); background: var(--warn-soft); }
+.pitfall svg { color: var(--warn); margin-top: 2px; }
+.flash { padding: 24px; border-radius: var(--r); background: var(--bg); }
+.flash-q { font-size: 1.1rem; font-weight: 600; margin-bottom: 16px; }
+.pager { margin-left: auto; display: flex; align-items: center; gap: 4px; color: var(--muted); }
+.status-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+.status-btn { display: flex; align-items: center; justify-content: center; gap: 9px; min-height: 54px; padding: 10px; border-radius: var(--r-s); border: 2px solid var(--line); font-weight: 600; }
+.status-btn:hover { border-color: #b9c0e6; }
+.status-btn.explore[aria-pressed=true] { border-color: #e7b04a; background: var(--warn-soft); color: var(--warn); }
+.status-btn.stuck[aria-pressed=true] { border-color: #e58f9b; background: var(--bad-soft); color: var(--bad); }
+.status-btn.clear[aria-pressed=true] { border-color: var(--ok-line); background: var(--ok-soft); color: var(--ok); }
+.unlock { margin-top: 18px; padding: 20px 22px; border-radius: var(--r); background: var(--ok-soft); }
+.unlock strong { display: flex; align-items: center; gap: 9px; color: var(--ok); }
+.unlock .btn { margin-top: 14px; }
+.unlock .chip { background: #fff; }
+.locked-page { max-width: 540px; margin: 20px auto; padding: 44px 36px; text-align: center; background: var(--panel); border: 1px solid var(--line); border-radius: 22px; }
+.lock-mark { display: inline-grid; place-items: center; width: 76px; height: 76px; margin-bottom: 18px; border-radius: 50%; background: #e9ecf6; color: #6b7294; }
+.locked-page p { margin-top: 10px; color: var(--muted); }
+.locked-page ul { display: grid; gap: 8px; margin: 16px 0 26px; }
+.locked-page li { display: flex; align-items: center; justify-content: center; gap: 9px; font-weight: 600; }

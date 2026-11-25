@@ -1,0 +1,32 @@
+/* Đăng nhập, đăng ký */
+.account { position: relative; margin-left: 10px; }
+.account summary { list-style: none; cursor: pointer; border-radius: 50%; }
+.account summary::-webkit-details-marker { display: none; }
+.account-dot { width: 44px; height: 44px; display: grid; place-items: center; border-radius: 50%; background: var(--brand-soft); color: var(--brand); font-weight: 700; }
+.account-menu { position: absolute; right: 0; top: 52px; width: max-content; min-width: 210px; max-width: 280px; padding: 8px; border-radius: 14px; background: #fff; border: 1px solid var(--line); box-shadow: 0 14px 36px rgb(20 25 60 / .16); }
+.account-menu p { padding: 8px 12px 10px; color: var(--muted); font-size: .9rem; overflow-wrap: anywhere; }
+.account-menu button { width: 100%; display: flex; align-items: center; gap: 10px; min-height: 44px; padding: 8px 12px; border-radius: 10px; font-weight: 600; }
+.account-menu button:hover { background: var(--brand-soft); color: var(--brand); }
+.auth { min-height: 100vh; display: grid; grid-template-columns: 1fr 1fr; background: #fff; }
+.auth-brand { display: grid; grid-template-rows: auto 1fr; padding: 36px 48px; background: #232c7d; color: #fff; }
+.auth-brand .brand-mark { box-shadow: 0 0 0 1.5px rgb(199 241 216 / .45); }
+.auth-brand > div { align-self: center; display: grid; gap: 34px; }
+.auth-brand h2 { font-size: clamp(1.9rem, 1rem + 2.4vw, 2.9rem); font-weight: 800; line-height: 1.14; }
+.auth-brand .hero-art { justify-self: start; }
+.auth-side { display: grid; place-items: center; padding: 40px 24px; }
+.auth-form { width: 100%; max-width: 400px; }
+.auth-form h1 { margin-bottom: 24px; }
+.auth-lead { margin: -10px 0 22px; color: var(--muted); }
+.auth-error, .auth-notice { padding: 12px 16px; margin-bottom: 18px; border-radius: var(--r-s); background: var(--bad-soft); color: var(--bad); font-weight: 500; }
+.auth-notice { background: var(--ok-soft); color: var(--ok); }
+.auth-error[hidden] { display: none; }
+.auth-forgot { margin: -8px 0 18px; text-align: right; }
+.auth-note { margin-bottom: 18px; color: var(--muted); font-size: .9rem; }
+.auth-foot { margin-top: 22px; text-align: center; color: var(--muted); }
+.password { position: relative; }
+.field .password input { padding-right: 68px; }
+.password button { position: absolute; right: 4px; top: 4px; bottom: 4px; padding: 0 12px; border-radius: 9px; color: var(--brand); font-weight: 600; font-size: .95rem; }
+.field small { color: var(--muted); font-size: .9rem; }
+.center-page { min-height: 100vh; display: grid; place-content: center; justify-items: center; gap: 14px; padding: 24px; text-align: center; }
+.center-page p { max-width: 46ch; color: var(--muted); }
+.center-page .row { justify-content: center; margin-top: 8px; }

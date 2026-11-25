@@ -1,10 +1,11 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {boot} from './helpers.js';
+import {boot, user} from './helpers.js';
 
 test('trang môn học, giảng viên, ôn thi và Node hiển thị đúng phần', async () => {
-  const {app, go, click} = await boot('#/course/network');
-  for (const tab of ['Bản đồ kiến thức', 'Bài tập lớn', 'Giảng viên & chấm điểm', 'Ôn thi']) assert.ok(app.innerHTML.includes(tab), tab);
+  const {app, go, click} = await boot('#/course/network', {user});
+  for (const tab of ['Bản đồ kiến thức', 'Bài tập lớn', 'Giảng viên', 'Ôn thi']) assert.ok(app.innerHTML.includes(`>${tab}</a>`), tab);
+  assert.doesNotMatch(app.innerHTML, /Giảng viên & chấm điểm|Của tôi/);
   assert.doesNotMatch(app.innerHTML, />Kiểm tra</);
 
   go('#/course/network/project');
@@ -28,8 +29,9 @@ test('trang môn học, giảng viên, ôn thi và Node hiển thị đúng ph�
   go('#/node/net-foundation');
   for (const heading of ['Tóm tắt khái niệm', 'Tài liệu chọn lọc', 'Cảnh báo bẫy', 'Flash-check', 'Hỏi đáp', 'Tự đánh giá']) assert.ok(app.innerHTML.includes(heading), heading);
   assert.equal((app.innerHTML.match(/class="node-step"/g) || []).length, 6);
+  assert.doesNotMatch(app.innerHTML, /data-action="save"/);
 
-  const routes = [['#/home', 'Chọn môn học'], ['#/courses', 'Chọn môn học'], ['#/my', 'Của tôi'], ['#/help', 'Góp ý cho nhóm'], ['#/node/sai', 'Không tìm thấy trang'], ['#/constructor', 'Không tìm thấy trang']];
+  const routes = [['#/home', 'Chọn môn học'], ['#/courses', 'Chọn môn học'], ['#/my', 'Chọn môn học'], ['#/help', 'Góp ý cho nhóm'], ['#/node/sai', 'Không tìm thấy trang'], ['#/constructor', 'Không tìm thấy trang']];
   for (const [hash, text] of routes) {
     go(hash);
     assert.ok(app.innerHTML.includes(text), hash);

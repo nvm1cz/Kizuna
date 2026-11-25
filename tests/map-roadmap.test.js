@@ -1,10 +1,10 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {nodes, courses} from '../data.js';
-import {boot} from './helpers.js';
+import {nodes, courses} from '../public/js/content/courses.js';
+import {boot, user} from './helpers.js';
 
 test('bản đồ giữ 4 chặng, khóa Node theo tiên quyết và mở dần khi thông suốt', async () => {
-  const {app, go, click, state} = await boot('#/course/network');
+  const {app, go, click, backend, settle} = await boot('#/course/network', {user});
   for (const c of courses) {
     go('#/course/' + c.id);
     const own = nodes.filter(n => n.courseId === c.id), roots = own.filter(n => !n.deps.length);
@@ -17,11 +17,14 @@ test('bản đồ giữ 4 chặng, khóa Node theo tiên quyết và mở dần 
   assert.match(app.innerHTML, /locked-page/);
   assert.doesNotMatch(app.innerHTML, /class="node-step"/);
   click({action: 'set-status', id: 'net-tcp', status: 'clear'});
-  assert.equal(state().progress['net-tcp'], undefined, 'không đánh dấu được Node đang khóa');
+  await settle();
+  assert.equal(backend.remote.progress['net-tcp'], undefined, 'không đánh dấu được Node đang khóa');
 
   go('#/node/net-foundation');
   click({action: 'set-status', id: 'net-foundation', status: 'clear'});
   assert.match(app.innerHTML, /class="unlock"/);
+  await settle();
+  assert.equal(backend.remote.progress['net-foundation'], 'clear', 'tiến độ được đẩy lên máy chủ');
   go('#/course/network');
   assert.match(app.innerHTML, /class="map-card status-clear"[^>]+data-map-node="net-foundation"/);
   assert.match(app.innerHTML, /class="map-card status-open"[^>]+data-map-node="net-tcp"/);
