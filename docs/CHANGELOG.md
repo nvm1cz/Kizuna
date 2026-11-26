@@ -2,6 +2,16 @@
 
 Chi tiết từng thay đổi xem bằng `git log`. Tài liệu bàn giao cũ (`MVP_HANDOFF.md`) còn trong Git ở commit `3e7088e`.
 
+## v2.0 (2026-11-25)
+
+- Đổi tên Kizuna thành **Hustree**, logo cây kiến thức.
+- Lần đăng nhập đầu chọn trường, ngành, năm học; trang chủ hiện sẵn môn tương ứng.
+- Hai vai trò user và admin. Admin quản lý toàn bộ nội dung trên web; môn, Node, giảng viên, đề thi chuyển vào database.
+- Tab Đóng góp: gửi liên kết, PDF, ảnh; admin duyệt; điểm, danh hiệu, bảng xếp hạng.
+- Thông báo cho người dùng và admin.
+- Bảng xếp hạng hiện bên phải mọi trang, và có tab riêng trong Đóng góp.
+- Bỏ chữ nhỏ dưới Node khóa, chú thích bản đồ, dòng chân trang.
+
 ## v1.7 (2026-11-25)
 
 - Bắt buộc đăng nhập; đăng ký, quên mật khẩu bằng Supabase Auth.

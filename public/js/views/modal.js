@@ -1,21 +1,19 @@
 /** Hộp thoại: đặt câu hỏi, phản hồi, báo cáo. */
-import {courses, getCourse, getNode, nodesOf} from '../content/courses.js';
-import {state, courseIds} from '../core/store.js';
-import {esc} from './helpers.js';
+import {getCourse, getNode} from '../core/catalog.js';
+import {state} from '../core/store.js';
+import {courseOptions, esc, topicOptions} from './helpers.js';
 import {ico} from './icons.js';
 
-export const topicOptions = courseId => `<option value="">Chọn chủ đề</option>${courseIds.has(courseId) ? nodesOf(courseId).map(n => `<option value="${esc(n.id)}">${esc(n.title)}</option>`).join('') : ''}`;
-
 function askForm(m) {
-  const node = getNode(m.nodeId), courseId = node?.courseId || (courseIds.has(m.courseId) ? m.courseId : '');
+  const node = getNode(m.nodeId), courseId = node?.courseId || (getCourse(m.courseId) ? m.courseId : '');
   const choice = node
     ? `<p class="sub">${esc(getCourse(node.courseId).name)} · ${esc(node.title)}</p><input type="hidden" name="nodeId" value="${esc(node.id)}">`
-    : `<div class="field-pair"><div class="field"><label for="ask-course">Môn học</label><select name="courseId" id="ask-course"><option value="">Chọn môn học</option>${courses.map(c => `<option value="${c.id}" ${c.id === courseId ? 'selected' : ''}>${esc(c.name)}</option>`).join('')}</select></div>
+    : `<div class="field-pair"><div class="field"><label for="ask-course">Môn học</label><select name="courseId" id="ask-course" data-topics="ask-node">${courseOptions(courseId)}</select></div>
       <div class="field"><label for="ask-node">Chủ đề</label><select name="nodeId" id="ask-node" ${courseId ? '' : 'disabled'}>${topicOptions(courseId)}</select></div></div>`;
   return `<h2>Đặt câu hỏi ẩn danh</h2><form id="ask-form">${choice}
-    <div class="field"><label for="ask-title">Bạn đang vướng điều gì?</label><input name="title" id="ask-title" maxlength="120" placeholder="Vì sao recv() không nhận đủ byte?"></div>
+    <div class="field"><label for="ask-title">Bạn đang vướng điều gì?</label><input name="title" id="ask-title" maxlength="120" ></div>
     <div class="field"><label for="ask-body">Bạn đã thử gì?</label><textarea name="body" id="ask-body" maxlength="1500"></textarea></div>
-    <p class="sub">Mọi người dùng Kizuna đều xem được. Đừng ghi tên thật, email hoặc mã sinh viên.</p>
+    <p class="sub">Mọi người dùng Hustree đều xem được. Đừng ghi tên thật, email hoặc mã sinh viên.</p>
     <button class="btn btn-primary btn-block" type="submit">Gửi câu hỏi</button></form>`;
 }
 

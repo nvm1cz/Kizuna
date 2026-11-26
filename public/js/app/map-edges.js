@@ -1,5 +1,5 @@
 /** Các sợi nối trên bản đồ kiến thức. */
-import {getNode, nodesOf} from '../content/courses.js';
+import {getNode, nodesOf} from '../core/catalog.js';
 import {state, mastered} from '../core/store.js';
 
 /** Vẽ sợi nối giữa các Node trên màn hình rộng. Sợi liền = đã thông suốt Node phía trước. */
@@ -8,7 +8,7 @@ export function drawEdges() {
   const svg = panel?.querySelector('.map-edges');
   if (!svg) return;
   svg.replaceChildren();
-  if (window.matchMedia?.('(max-width: 1023px)').matches) return;
+  if (getComputedStyle(panel.querySelector('.map-track')).gridTemplateColumns.split(' ').length < 4) return; // bản đồ đang xếp dọc
   const box = panel.getBoundingClientRect();
   if (!box.width) return;
   svg.setAttribute('viewBox', `0 0 ${box.width} ${box.height}`);

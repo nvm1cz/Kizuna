@@ -1,13 +1,13 @@
 /** Trang một Node (chủ đề). */
-import {getCourse, getNode} from '../content/courses.js';
+import {getCourse, getNode} from '../core/catalog.js';
 import {missingPrereqs, nextStepTo, followers} from '../core/learning-path.js';
 import {local, state, STATUS, getStatus, unlocked, mastered, hasEmpathy, empathyCount} from '../core/store.js';
-import {esc, link, outside} from './helpers.js';
+import {documentLink, esc, link} from './helpers.js';
 import {ico} from './icons.js';
 import {offlineNote, questionCard} from './questions.js';
 
-const resource = (r, main = false) => outside(r.url, `resource ${main ? 'is-main' : ''}`,
-  `<span class="paper-icon">${ico('book', 22)}</span><span><strong>${esc(r.title)}</strong><small>${main ? 'Nên đọc trước' : 'Đọc thêm'}</small></span>${ico('external', 18)}`);
+const resource = (r, main = false) => documentLink(r, `resource ${main ? 'is-main' : ''}`,
+  `<span class="paper-icon">${ico(r.filePath ? 'file' : 'book', 22)}</span><span><strong>${esc(r.title)}</strong><small>${main ? 'Nên đọc trước' : 'Đọc thêm'}${r.by ? ` · ${esc(r.by)} đóng góp` : ''}</small></span>${ico('external', 18)}`);
 
 function lockedPage(n, c) {
   const missing = missingPrereqs(n.id, local.progress), next = nextStepTo(n.id, local.progress);
@@ -38,9 +38,9 @@ export function nodePage(id) {
 
   const bodies = [
     `<p class="summary">${esc(n.summary)}</p>`,
-    `${resource(main, true)}${more.map(r => resource(r)).join('')}`,
-    `<div class="pitfall">${ico('alert', 22)}<p>${esc(n.pitfall)}</p></div>`,
-    `<div class="flash"><p class="flash-q">${esc(flash.q)}</p>${shown ? `<div class="answer">${esc(flash.a)}</div>` : ''}
+    `${main ? resource(main, true) : '<p class="muted">Chưa có tài liệu.</p>'}${more.map(r => resource(r)).join('')}<p class="contribute-hint">${link(`contribute/send/${id}`, 'text-link', `${ico('gift', 18)} Đóng góp tài liệu cho chủ đề này`)}</p>`,
+    n.pitfall ? `<div class="pitfall">${ico('alert', 22)}<p>${esc(n.pitfall)}</p></div>` : '<p class="muted">Chưa có cảnh báo.</p>',
+    !flash ? '<p class="muted">Chưa có câu hỏi.</p>' : `<div class="flash"><p class="flash-q">${esc(flash.q)}</p>${shown ? `<div class="answer">${esc(flash.a)}</div>` : ''}
       <div class="row"><button type="button" class="btn btn-soft" data-action="quiz-toggle" data-id="${id}" data-index="${index}" aria-expanded="${Boolean(shown)}">${shown ? 'Ẩn giải thích' : 'Xem giải thích'}</button>
       ${n.flash.length > 1 ? `<span class="pager"><button type="button" class="icon-btn" aria-label="Câu trước" data-action="flash-step" data-id="${id}" data-step="-1" ${index === 0 ? 'disabled' : ''}>${ico('back', 20)}</button>${index + 1}/${n.flash.length}<button type="button" class="icon-btn" aria-label="Câu sau" data-action="flash-step" data-id="${id}" data-step="1" ${index === n.flash.length - 1 ? 'disabled' : ''}>${ico('chevron', 20)}</button></span>` : ''}</div></div>`,
     `${state.qaError ? offlineNote() : ''}<div class="row"><button type="button" class="btn btn-primary" data-action="ask" data-node="${id}">${ico('plus', 18)} Đặt câu hỏi</button>

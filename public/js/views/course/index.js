@@ -1,5 +1,5 @@
 /** Trang một môn: tiêu đề và 4 mục. Mỗi mục nằm trong một file cùng thư mục. */
-import {getCourse} from '../../content/courses.js';
+import {getCourse} from '../../core/catalog.js';
 import {state} from '../../core/store.js';
 import {esc, link} from '../helpers.js';
 import {ico} from '../icons.js';
@@ -16,7 +16,7 @@ export function coursePage(id) {
   const c = getCourse(id), tab = courseTab(), p = progressOf(id);
   const body = {map: mapTab, project: projectTab, lecturers: lecturersTab, exams: examsTab}[tab](id);
   return `${link('home', 'back-link', `${ico('back', 18)} Môn học`)}
-  <header class="course-head"><span class="course-icon" style="--c:${c.color};--s:${c.soft}">${ico(c.icon, 32)}</span>
+  <header class="course-head"><span class="course-icon" style="--c:${esc(c.color)};--s:${esc(c.soft)}">${ico(c.icon, 32)}</span>
     <div class="course-title"><span class="course-code">${esc(c.code)}</span><h1>${esc(c.name)}</h1></div>
     <div class="course-progress">${progressBar(p)}<span>${p.done}/${p.total} đã thông suốt</span></div></header>
   <nav class="tabs" aria-label="Nội dung môn học">${TABS.map(([key, name]) =>

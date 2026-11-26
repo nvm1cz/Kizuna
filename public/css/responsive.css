@@ -1,5 +1,5 @@
 /* Màn hình vừa: bản đồ xếp dọc theo chặng */
-@media (max-width: 1023px) {
+@container page (max-width: 860px) {
   .map-edges { display: none; }
   .map-track { grid-template-columns: 1fr; gap: 0; }
   .map-stage { position: relative; padding: 0 0 30px 52px; }
@@ -7,17 +7,41 @@
   .map-stage h2 { margin-left: -52px; gap: 20px; margin-bottom: 14px; }
   .map-nodes { grid-template-columns: repeat(auto-fill, minmax(min(100%, 260px), 1fr)); gap: 14px; }
   .map-card { min-height: 0; }
-  .map-legend { margin-top: 4px; }
   .node-layout { grid-template-columns: minmax(0, 760px); }
   .toc { display: none; }
+  .contribute-layout { grid-template-columns: minmax(0, 1fr); }
+}
+@container page (max-width: 640px) {
+  .tabs.tabs-3 { grid-template-columns: 1fr 1fr 1fr; }
+  .layout.is-single .content { padding-bottom: 112px; }
+  .dropzone { flex-wrap: wrap; }
+  .dropzone .btn { width: 100%; }
+}
+/* Không đủ chỗ cho cột phải: bảng xếp hạng xuống cuối trang */
+@media (max-width: 1279px) {
+  :root { --gutter: 48px; }
+  .layout { gap: 40px; }
+}
+@media (max-width: 1099px) {
+  .layout, .layout.is-collapsed { grid-template-columns: minmax(0, 1fr); gap: 0; }
+  .content { min-height: 0; padding-bottom: 48px; }
+  .ranking { position: static; max-width: 420px; padding: 32px 0 64px; border-top: 1px solid var(--line); }
+  .ranking.is-collapsed { padding-top: 20px; }
+  .ranking-open { width: auto; display: flex; gap: 10px; padding: 0 20px; border-radius: 99px; font-weight: 600; }
+  .ranking-open span { display: inline; }
 }
 @media (max-width: 720px) {
-  .topbar-inner { height: 60px; padding: 0 16px; }
+  :root { --gutter: 22px; --page-top: 32px; }
+  .topbar-inner { height: 64px; }
   .nav { position: fixed; z-index: 30; left: 0; right: 0; bottom: 0; gap: 0; padding: 6px 8px calc(6px + env(safe-area-inset-bottom)); background: #fff; border-top: 1px solid var(--line); }
   .nav-link { flex: 1; flex-direction: column; gap: 2px; padding: 7px; font-size: .875rem; }
-  .content { padding: 24px 16px 48px; }
-  .footer { padding: 20px 16px 104px; }
-  .account { margin-left: auto; }
+  .content { padding-bottom: 40px; }
+  .ranking { max-width: none; padding-bottom: 120px; }
+  .course-grid { gap: 18px; }
+  .topbar-tools { margin-left: auto; }
+  .notice-menu { position: fixed; top: 64px; left: 12px; right: 12px; width: auto; }
+  .editor-actions { bottom: 72px; }
+  .list-row { padding: 14px; }
   .auth { grid-template-columns: 1fr; grid-template-rows: auto 1fr; }
   .auth-brand { display: block; padding: 18px 20px; }
   .auth-brand > div { display: none; }

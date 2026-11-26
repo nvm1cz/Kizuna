@@ -2,7 +2,7 @@
 .course-head { display: flex; flex-wrap: wrap; align-items: center; gap: 18px; }
 .course-title { flex: 1; min-width: 200px; }
 .course-progress { width: 220px; display: grid; gap: 7px; color: var(--muted); font-size: .95rem; }
-.tabs { display: flex; gap: 4px; margin: 26px 0 30px; border-bottom: 1px solid var(--line); overflow-x: auto; scrollbar-width: none; }
+.tabs { display: flex; gap: 4px; margin: 34px 0 40px; border-bottom: 1px solid var(--line); overflow-x: auto; scrollbar-width: none; }
 .tabs::-webkit-scrollbar { display: none; }
 .tab { flex: none; padding: 13px 18px; border-bottom: 3px solid transparent; color: var(--muted); font-weight: 600; white-space: nowrap; }
 .tab:hover { color: var(--brand); }
@@ -15,13 +15,13 @@
 .edge { fill: none; stroke: #b9c0da; stroke-width: 2.5; stroke-linecap: round; stroke-dasharray: 1 8; transition: stroke .15s; }
 .edge.is-done { stroke: var(--ok-line); stroke-dasharray: none; }
 .edge.is-hot { stroke: var(--thread); }
-.map-track { position: relative; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 52px; }
+.map-track { position: relative; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 36px; }
 .map-stage h2 { display: flex; align-items: center; gap: 10px; min-height: 34px; margin-bottom: 20px; font-size: 1.05rem; }
 .map-stage h2 span { flex: none; width: 32px; height: 32px; display: grid; place-items: center; border-radius: 50%; background: var(--ink); color: #fff; font-size: .95rem; }
-.map-nodes { display: grid; gap: 26px; }
-.map-card { display: flex; width: 100%; gap: 12px; align-items: flex-start; padding: 16px; min-height: 104px; border-radius: var(--r); background: var(--panel); border: 2px solid var(--line); transition: transform .15s, box-shadow .15s; }
+.map-nodes { display: grid; gap: 30px; }
+.map-card { display: flex; width: 100%; gap: 10px; align-items: flex-start; padding: 14px; min-height: 104px; border-radius: var(--r); background: var(--panel); border: 2px solid var(--line); transition: transform .15s, box-shadow .15s; }
 .map-icon { flex: none; width: 34px; height: 34px; display: grid; place-items: center; border-radius: 50%; background: var(--brand-soft); color: var(--brand); }
-.map-copy { display: grid; gap: 4px; min-width: 0; }
+.map-copy { display: grid; align-content: center; gap: 4px; min-width: 0; min-height: 34px; }
 .map-copy strong { line-height: 1.35; }
 .map-copy small { font-size: .875rem; line-height: 1.45; color: var(--muted); }
 a.map-card:hover { transform: translateY(-2px); box-shadow: var(--shadow); }
@@ -42,12 +42,6 @@ a.map-card:hover { transform: translateY(-2px); box-shadow: var(--shadow); }
 .status-locked small { color: #5d6484; }
 .map-card.is-needed { animation: needed .6s 3; }
 @keyframes needed { 50% { border-color: var(--thread); box-shadow: 0 0 0 5px rgb(228 80 60 / .18); } }
-.map-legend { display: flex; flex-wrap: wrap; gap: 10px 26px; margin-top: 32px; color: var(--muted); font-size: .95rem; }
-.key { display: inline-flex; align-items: center; gap: 9px; }
-.key::before { content: ''; width: 18px; height: 18px; border-radius: 6px; border: 2px solid var(--line); background: #fff; }
-.key-clear::before { border-color: var(--ok-line); background: var(--ok-soft); }
-.key-open::before { border-color: var(--brand); }
-.key-locked::before { background: #e4e7f1; border-color: #d4d9e8; }
 
 /* Bài tập lớn */
 .lead { display: grid; justify-items: start; gap: 8px; }
@@ -66,7 +60,7 @@ a.map-card:hover { transform: translateY(-2px); box-shadow: var(--shadow); }
 .checks input:checked + span { color: var(--muted); text-decoration: line-through; }
 
 /* Giảng viên */
-.lecturer-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 440px), 1fr)); gap: 24px; align-items: start; }
+.lecturer-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 440px), 1fr)); gap: 32px; align-items: start; }
 .lecturer { background: var(--panel); border: 1px solid var(--line); border-radius: 20px; padding: 26px; }
 .lecturer header { display: flex; align-items: center; flex-wrap: wrap; gap: 14px; }
 .lecturer header > div { flex: 1; min-width: 150px; }

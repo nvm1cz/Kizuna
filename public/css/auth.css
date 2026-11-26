@@ -1,15 +1,7 @@
 /* Đăng nhập, đăng ký */
-.account { position: relative; margin-left: 10px; }
-.account summary { list-style: none; cursor: pointer; border-radius: 50%; }
-.account summary::-webkit-details-marker { display: none; }
-.account-dot { width: 44px; height: 44px; display: grid; place-items: center; border-radius: 50%; background: var(--brand-soft); color: var(--brand); font-weight: 700; }
-.account-menu { position: absolute; right: 0; top: 52px; width: max-content; min-width: 210px; max-width: 280px; padding: 8px; border-radius: 14px; background: #fff; border: 1px solid var(--line); box-shadow: 0 14px 36px rgb(20 25 60 / .16); }
-.account-menu p { padding: 8px 12px 10px; color: var(--muted); font-size: .9rem; overflow-wrap: anywhere; }
-.account-menu button { width: 100%; display: flex; align-items: center; gap: 10px; min-height: 44px; padding: 8px 12px; border-radius: 10px; font-weight: 600; }
-.account-menu button:hover { background: var(--brand-soft); color: var(--brand); }
 .auth { min-height: 100vh; display: grid; grid-template-columns: 1fr 1fr; background: #fff; }
 .auth-brand { display: grid; grid-template-rows: auto 1fr; padding: 36px 48px; background: #232c7d; color: #fff; }
-.auth-brand .brand-mark { box-shadow: 0 0 0 1.5px rgb(199 241 216 / .45); }
+.auth-brand .brand-name b { color: #7fd8a8; }
 .auth-brand > div { align-self: center; display: grid; gap: 34px; }
 .auth-brand h2 { font-size: clamp(1.9rem, 1rem + 2.4vw, 2.9rem); font-weight: 800; line-height: 1.14; }
 .auth-brand .hero-art { justify-self: start; }

@@ -1,6 +1,6 @@
 /** Luồng hỏi đáp: tải dữ liệu, đồng cảm và gửi biểu mẫu. */
-import {getNode} from '../content/courses.js';
-import {state, nodeIds, hasEmpathy} from '../core/store.js';
+import {getNode} from '../core/catalog.js';
+import {state, hasEmpathy} from '../core/store.js';
 import {closeModal, notify, render} from './render.js';
 import {runtime} from './runtime.js';
 
@@ -9,13 +9,27 @@ export async function loadCommunity(silent = false) {
   try {
     const qa = await runtime.backend.community();
     if (state.user?.id !== uid) return;
-    state.qa = {...qa, questions: qa.questions.filter(q => !q.nodeId || nodeIds.has(q.nodeId))};
+    state.qa = {...qa, questions: qa.questions.filter(q => !q.nodeId || getNode(q.nodeId))};
     state.qaError = false;
   } catch {
     state.qaError = true;
   }
-  render();
+  if (['community', 'node'].includes(state.route) && state.phase === 'in') {
+    render();
+    showFocusedQuestion();
+  }
   if (state.qaError && !silent) notify('Chưa kết nối được cộng đồng.', true);
+}
+
+/** Mở và cuộn tới câu hỏi trong địa chỉ #/community/<mã>. */
+export function focusQuestion() {
+  state.focusQuestion = state.route === 'community' ? state.segments[1] || null : null;
+  if (!state.focusQuestion) return;
+  state.expanded.add(state.focusQuestion);
+  Object.assign(state, {communityFilter: 'all', communitySearch: ''});
+}
+export function showFocusedQuestion() {
+  if (state.focusQuestion) requestAnimationFrame(() => document.getElementById('q-' + state.focusQuestion)?.scrollIntoView({block: 'center'}));
 }
 
 export async function empathize(el) {

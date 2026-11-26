@@ -13,7 +13,7 @@ test('đặt câu hỏi tại chỗ, không bắt buộc chọn môn hay chủ �
   assert.match(app.innerHTML, /Đặt câu hỏi ẩn danh/);
   assert.doesNotMatch(app.innerHTML, /id="ask-(body|title|course)"[^>]*(required|minlength)/);
 
-  handlers.change({target: {id: 'ask-course', value: 'network', matches: () => false}});
+  handlers.change({target: {id: 'ask-course', value: 'network', dataset: {topics: 'ask-node'}, matches: () => false}});
   assert.equal(topic.disabled, false);
   assert.match(topic.innerHTML, /net-tcp/);
 

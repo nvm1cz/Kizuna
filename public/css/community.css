@@ -2,11 +2,12 @@
 .pills { display: flex; flex-wrap: wrap; gap: 8px; margin: 16px 0 22px; }
 .pill { padding: 8px 16px; border-radius: 99px; background: var(--panel); box-shadow: inset 0 0 0 1px var(--line); font-size: .95rem; font-weight: 500; }
 .pill[aria-pressed=true] { background: var(--brand); color: #fff; box-shadow: none; }
-.q-list { display: grid; gap: 16px; }
+.q-list { display: grid; gap: 22px; }
 .node .q-list { margin: 18px 0 14px; }
 .question { background: var(--panel); border: 1px solid var(--line); border-radius: var(--r); padding: 22px 24px; overflow-wrap: anywhere; }
 .question h3 { margin: 4px 0 6px; }
 .question > .row { margin-top: 14px; gap: 8px; }
+.question.is-focus { border: 2px solid var(--brand); }
 .q-meta { color: var(--muted); font-size: .9rem; }
 .q-topic-row { margin-top: 10px; }
 .q-topic { color: var(--brand); font-weight: 600; font-size: .95rem; }

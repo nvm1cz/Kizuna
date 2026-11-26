@@ -1,9 +1,9 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {courses, nodes, getNode} from '../public/js/content/courses.js';
-import {courseGuides} from '../public/js/content/project-guides.js';
-import {lecturers} from '../public/js/content/lecturers.js';
-import {exams, examTerms} from '../public/js/content/exams.js';
+import {courses, exams, examTerms, getNode, guides as courseGuides, lecturers, majors, nodes, schools, setCatalog} from '../public/js/core/catalog.js';
+import {seedContent} from '../supabase/seed/index.js';
+
+setCatalog(seedContent());
 
 const https = url => assert.equal(new URL(url).protocol, 'https:');
 
@@ -11,7 +11,7 @@ test('bản đồ 4 môn đầy đủ và không có vòng lặp tiên quyết',
   assert.equal(courses.length, 4);
   assert.equal(new Set(nodes.map(n => n.id)).size, nodes.length);
   for (const n of nodes) {
-    assert.match(n.id, /^[a-z0-9-]{1,60}$/, 'mã Node phải khớp ràng buộc trong schema.sql');
+    assert.match(n.id, /^[a-z0-9-]{1,60}$/, 'mã Node phải khớp ràng buộc trong supabase');
     assert.ok(n.summary.length > 25 && n.pitfall.length > 15 && n.flash.length && n.resources.length, n.id);
     for (const dep of n.deps) {
       assert.equal(getNode(dep)?.courseId, n.courseId);
@@ -26,6 +26,16 @@ test('bản đồ 4 môn đầy đủ và không có vòng lặp tiên quyết',
     trail.pop();
   };
   nodes.forEach(n => visit(n.id));
+});
+
+test('trường, ngành và môn của ngành hợp lệ', () => {
+  assert.equal(majors.length, 68);
+  assert.equal(new Set(majors.map(m => m.id)).size, 68);
+  for (const m of majors) {
+    assert.match(m.id, /^[A-Z0-9-]{2,12}$/);
+    assert.ok(schools.some(s => s.id === m.schoolId), m.id);
+  }
+  for (const c of courses) for (const {major, year} of c.majors) assert.ok(majors.some(m => m.id === major) && year >= 1 && year <= 6, `${c.id} ${major}`);
 });
 
 test('mỗi môn có giảng viên với cách chấm hợp lệ', () => {

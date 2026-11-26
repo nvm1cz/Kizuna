@@ -1,11 +1,11 @@
 /* Trang Node */
-.node-layout { display: grid; grid-template-columns: 200px minmax(0, 760px); gap: 48px; justify-content: center; }
-.toc ol { position: sticky; top: 100px; display: grid; gap: 2px; border-left: 2px solid var(--line); }
+.node-layout { display: grid; grid-template-columns: 180px minmax(0, 760px); gap: 36px; justify-content: center; }
+.toc ol { position: sticky; top: 124px; display: grid; gap: 2px; border-left: 2px solid var(--line); }
 .toc button { width: 100%; padding: 8px 0 8px 18px; color: var(--muted); font-size: .95rem; }
 .toc button:hover { color: var(--brand); }
 .node { background: var(--panel); border: 1px solid var(--line); border-radius: 22px; padding: 38px 44px; }
 .node-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; }
-.node-step { padding-top: 36px; scroll-margin-top: 60px; }
+.node-step { padding-top: 40px; scroll-margin-top: 64px; }
 .node-step h2 { display: flex; align-items: center; gap: 12px; margin-bottom: 14px; font-size: 1.25rem; }
 .node-step h2 span { flex: none; width: 32px; height: 32px; display: grid; place-items: center; border-radius: 10px; background: var(--brand-soft); color: var(--brand); font-size: 1rem; }
 .summary { font-size: 1.125rem; line-height: 1.75; }

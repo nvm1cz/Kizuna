@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {nodes, courses} from '../public/js/content/courses.js';
+import {nodes, courses} from '../public/js/core/catalog.js';
 import {boot, user} from './helpers.js';
 
 test('bản đồ giữ 4 chặng, khóa Node theo tiên quyết và mở dần khi thông suốt', async () => {
@@ -12,6 +12,8 @@ test('bản đồ giữ 4 chặng, khóa Node theo tiên quyết và mở dần 
     assert.equal((app.innerHTML.match(/data-map-node="/g) || []).length, own.length, c.id);
     assert.equal((app.innerHTML.match(/map-card status-locked/g) || []).length, own.length - roots.length, c.id);
   }
+
+  assert.doesNotMatch(app.innerHTML, /Cần: |map-legend|Nội dung mang tính tham khảo/);
 
   go('#/node/net-tcp');
   assert.match(app.innerHTML, /locked-page/);

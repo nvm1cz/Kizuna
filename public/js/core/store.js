@@ -1,5 +1,5 @@
 /** Trạng thái ứng dụng. `local` là dữ liệu học của tài khoản đang đăng nhập, `state` là phần tạm của giao diện. */
-import {courses, nodes} from '../content/courses.js';
+import {getNode} from './catalog.js';
 import {isUnlocked, isMastered} from './learning-path.js';
 
 /** Tiến độ khi chưa có tài khoản (bản v1.6 trở về trước). */
@@ -32,28 +32,41 @@ export function persist() {
   try { localStorage.setItem(cacheKey(uid), JSON.stringify(rest)); } catch { /* chế độ riêng tư */ }
 }
 
+const emptyContribute = () => ({mine: null});
+const COLLAPSE_KEY = 'hustree-ranking-collapsed';
+const emptyBoard = () => ({period: 'month', list: null, collapsed: read(COLLAPSE_KEY) === true});
+
+/** Nhớ trên máy này người dùng đã thu gọn bảng xếp hạng hay chưa. */
+export function setCollapsed(collapsed) {
+  state.board.collapsed = collapsed;
+  try { localStorage.setItem(COLLAPSE_KEY, JSON.stringify(collapsed)); } catch { /* chế độ riêng tư */ }
+}
+const emptyAdmin = () => ({pending: null, reports: null, users: null, rejecting: null, draft: null});
+const emptyNotices = () => ({unread: 0, items: []});
 const emptyCommunity = () => ({questions: [], replies: [], nodeCounts: {}, myEmpathy: []});
 
 export const state = {
-  // 'boot' | 'setup' | 'out' | 'recovery' | 'loading' | 'failed' | 'in'
-  phase: 'boot', setupProblem: null, user: null,
+  // 'boot' | 'setup' | 'out' | 'recovery' | 'loading' | 'failed' | 'onboarding' | 'in'
+  phase: 'boot', setupProblem: null, failure: '', user: null, me: null,
   auth: {mode: 'login', email: '', error: '', notice: ''},
   route: 'home', segments: [],
   search: '', communitySearch: '', communityFilter: 'all',
   modal: null, expanded: new Set(), flashIndex: {}, examTerm: 'mid', openAnswers: new Set(), qaExpanded: false,
+  courseScope: 'year', focusQuestion: null,
+  contribute: emptyContribute(), board: emptyBoard(), admin: emptyAdmin(), notices: emptyNotices(),
   qa: emptyCommunity(), qaError: false, busy: false
 };
+
+export const isAdmin = () => state.me?.role === 'admin';
 
 /** Xóa mọi thứ của người dùng trước khỏi giao diện. */
 export function resetView() {
   Object.assign(state, {
     search: '', communitySearch: '', communityFilter: 'all', modal: null, expanded: new Set(), flashIndex: {},
-    examTerm: 'mid', openAnswers: new Set(), qaExpanded: false, qa: emptyCommunity(), qaError: false
+    examTerm: 'mid', openAnswers: new Set(), qaExpanded: false, qa: emptyCommunity(), qaError: false,
+    me: null, courseScope: 'year', focusQuestion: null, contribute: emptyContribute(), board: emptyBoard(), admin: emptyAdmin(), notices: emptyNotices()
   });
 }
-
-export const courseIds = new Set(courses.map(c => c.id));
-export const nodeIds = new Set(nodes.map(n => n.id));
 
 export const STATUS = {explore: 'Đang khám phá', stuck: 'Cần gỡ rối', clear: 'Đã thông suốt'};
 export const getStatus = id => local.progress[id] || null;
@@ -70,11 +83,11 @@ export function legacyStudy() {
   const raw = read(LEGACY_KEY);
   if (!raw || typeof raw !== 'object') return null;
   const pick = (source, keep) => Object.fromEntries(Object.entries(source || {}).filter(keep));
-  const progress = pick(raw.progress, ([id, status]) => nodeIds.has(id) && Object.hasOwn(STATUS, status));
+  const progress = pick(raw.progress, ([id, status]) => getNode(id) && Object.hasOwn(STATUS, status));
   if (!Object.keys(progress).length) return null;
   return {
     progress,
-    answers: pick(raw.answers, ([id, list]) => nodeIds.has(id) && Array.isArray(list)),
+    answers: pick(raw.answers, ([id, list]) => getNode(id) && Array.isArray(list)),
     guideChecks: pick(raw.guideChecks, ([key, on]) => key.length <= 100 && typeof on === 'boolean')
   };
 }

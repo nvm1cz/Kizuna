@@ -35,12 +35,13 @@ test('đổi lỗi Supabase thành thông báo tiếng Việt, không lộ lỗi
 });
 
 test('schema: mọi bảng bật RLS, hàm định nghĩa quyền đều khóa search_path', async () => {
-  const sql = await fs.readFile(new URL('../supabase/schema.sql', import.meta.url), 'utf8');
+  const sql = await fs.readFile(new URL('../supabase/01_schema.sql', import.meta.url), 'utf8') + await fs.readFile(new URL('../supabase/02_hustree.sql', import.meta.url), 'utf8');
   const tables = [...sql.matchAll(/create table if not exists public\.(\w+)/g)].map(m => m[1]);
-  assert.equal(tables.length, 7);
+  assert.equal(tables.length, 19);
   for (const t of tables) assert.match(sql, new RegExp(`alter table public\\.${t} enable row level security`), t);
   for (const block of sql.split(/create or replace function /).slice(1)) {
     const head = block.split('$$')[0];
     assert.match(head, /set search_path = ''/, head.split('(')[0]);
   }
+  for (const [, name, body] of sql.matchAll(/function public\.(admin_\w+)\([^)]*\)[\s\S]*?\$\$([\s\S]*?)\$\$/g)) assert.match(body, /kizuna\.require_admin\(\)/, name);
 });

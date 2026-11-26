@@ -5,6 +5,9 @@ import {fakeBackend, fakeBrowser, user} from './helpers.js';
 const legacy = JSON.stringify({device: 'x', progress: {'net-foundation': 'clear', 'khong-co': 'clear', 'net-tcp': 'sai'}, answers: {'net-foundation': [0]}});
 fakeBrowser('#/home', {stored: {'kizuna-mvp-state-v1': legacy}});
 const {local, openAccount, closeAccount} = await import('../public/js/core/store.js');
+const {setCatalog} = await import('../public/js/core/catalog.js');
+const {seedContent} = await import('../supabase/seed/index.js');
+setCatalog(seedContent());
 const {createSync} = await import('../public/js/services/sync.js');
 
 test('chuyển tiến độ cũ trên máy vào tài khoản trống, đúng một lần', async () => {

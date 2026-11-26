@@ -31,7 +31,7 @@ test('trang môn học, giảng viên, ôn thi và Node hiển thị đúng ph�
   assert.equal((app.innerHTML.match(/class="node-step"/g) || []).length, 6);
   assert.doesNotMatch(app.innerHTML, /data-action="save"/);
 
-  const routes = [['#/home', 'Chọn môn học'], ['#/courses', 'Chọn môn học'], ['#/my', 'Chọn môn học'], ['#/help', 'Góp ý cho nhóm'], ['#/node/sai', 'Không tìm thấy trang'], ['#/constructor', 'Không tìm thấy trang']];
+  const routes = [['#/home', 'Học từng nhánh'], ['#/courses', 'Học từng nhánh'], ['#/my', 'Học từng nhánh'], ['#/help', 'Góp ý cho Hustree'], ['#/contribute', 'Gửi quản trị viên duyệt'], ['#/profile', 'Hồ sơ học tập'], ['#/admin', 'Không tìm thấy trang'], ['#/node/sai', 'Không tìm thấy trang'], ['#/constructor', 'Không tìm thấy trang']];
   for (const [hash, text] of routes) {
     go(hash);
     assert.ok(app.innerHTML.includes(text), hash);

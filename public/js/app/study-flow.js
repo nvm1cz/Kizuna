@@ -1,5 +1,5 @@
 /** Luồng học: đánh dấu Node và giải thích vì sao Node bị khóa. */
-import {getNode, nodesOf} from '../content/courses.js';
+import {getNode, nodesOf} from '../core/catalog.js';
 import {followers, missingPrereqs} from '../core/learning-path.js';
 import {local, unlocked} from '../core/store.js';
 import {notify, render} from './render.js';

@@ -1,5 +1,5 @@
 /** Thanh tiến độ của một môn. */
-import {nodesOf} from '../content/courses.js';
+import {nodesOf} from '../core/catalog.js';
 import {mastered} from '../core/store.js';
 
 export const progressOf = courseId => {

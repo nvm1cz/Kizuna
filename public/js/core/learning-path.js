@@ -2,7 +2,7 @@
  * Quy tắc khóa Node: một Node chỉ mở khi MỌI Node tiên quyết đã mở và được đánh dấu "Đã thông suốt".
  * Hàm thuần, nhận progress ({nodeId: 'explore' | 'stuck' | 'clear'}) để dễ kiểm thử.
  */
-import {nodes, getNode} from '../content/courses.js';
+import {nodes, getNode} from './catalog.js';
 
 export const isUnlocked = (id, progress) => {
   const node = getNode(id);

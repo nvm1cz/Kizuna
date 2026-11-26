@@ -1,5 +1,5 @@
 /** Trang Hỏi đáp. */
-import {courses, getCourse, getNode} from '../content/courses.js';
+import {courses, getCourse, getNode} from '../core/catalog.js';
 import {state} from '../core/store.js';
 import {esc, empty} from './helpers.js';
 import {ico} from './icons.js';

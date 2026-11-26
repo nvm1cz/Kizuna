@@ -37,7 +37,7 @@
 .searchbox:focus-within { border-color: var(--brand); }
 .searchbox.wide { width: 100%; }
 .searchbox input { flex: 1; min-width: 0; height: 48px; border: 0; outline: 0; background: none; color: var(--ink); }
-.section-head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 20px; }
+.section-head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 28px; }
 .empty { display: grid; justify-items: center; gap: 8px; padding: 40px 24px; text-align: center; color: var(--muted); background: var(--panel); border: 1px dashed #cdd2e6; border-radius: var(--r); }
 .empty strong { color: var(--ink); font-size: 1.1rem; }
 .empty .btn { margin-top: 10px; }

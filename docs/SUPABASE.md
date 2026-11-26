@@ -1,107 +1,81 @@
-# Cài đặt Supabase cho Kizuna
+# Cài đặt Supabase cho Hustree
 
-Làm một lần, khoảng 10 phút. Người làm nên là người sẽ quản lý dữ liệu của nhóm.
+## 1. Tạo project (đã làm thì bỏ qua)
 
-## 1. Tạo project
+1. https://supabase.com/dashboard → **New project**, vùng **Southeast Asia (Singapore)**, bật **Enable Data API**.
+2. Cất mật khẩu database ở nơi an toàn, **không** đưa vào code hay nhóm chat.
 
-1. Vào https://supabase.com/dashboard, đăng nhập rồi chọn **New project**.
-2. Đặt tên `kizuna`, chọn vùng **Southeast Asia (Singapore)**.
-3. Đặt mật khẩu database và cất ở nơi an toàn. **Không** đưa mật khẩu này vào code hay gửi trong nhóm chat.
-4. Chờ project tạo xong.
+## 2. Chạy SQL
 
-## 2. Tạo bảng
+Mở **SQL Editor → New query**, chạy **lần lượt từng file**:
 
-1. Mở **SQL Editor** → **New query**.
-2. Dán toàn bộ nội dung [supabase/schema.sql](../supabase/schema.sql) → **Run**.
-3. Nếu Supabase cảnh báo câu lệnh có thể xóa hoặc thay đổi (do có `drop policy`, `drop trigger`), chọn chạy tiếp: file chỉ thay policy và trigger của Kizuna, không xóa dữ liệu.
-4. Mở **Table Editor**, phải thấy 7 bảng và bảng `questions` có 5 câu hỏi minh họa.
-
-Chạy lại file này nhiều lần vẫn an toàn.
-
-## 3. Cấu hình đăng nhập
-
-**Authentication → URL Configuration**
-
-| Mục | Giá trị |
-|---|---|
-| Site URL | `https://kizuna-hust-mvp.vercel.app/` |
-| Redirect URLs | `https://kizuna-hust-mvp.vercel.app/` và `http://localhost:3000/` |
-
-**Authentication → Sign In / Providers → Email**
-
-- Bật **Email**. Nếu có mục độ dài mật khẩu tối thiểu, đặt **8**.
-- **Confirm email**: chọn một trong hai cách dưới đây.
-
-> **Quan trọng:** email mặc định của Supabase **chỉ gửi được cho thành viên project và tối đa 2 thư mỗi giờ**. Sinh viên thử nghiệm sẽ không nhận được thư.
-
-| | Cách A: thử MVP nhanh | Cách B: dùng thật |
+| Thứ tự | File | Ghi chú |
 |---|---|---|
-| Confirm email | **Tắt** | **Bật** |
-| Cần làm thêm | Không | Cấu hình **Custom SMTP** (Resend, Brevo, Gmail...) ở Authentication → Emails |
-| Đăng ký | Vào được ngay | Phải mở thư xác nhận |
-| Quên mật khẩu | Không gửi được thư cho người ngoài nhóm | Hoạt động |
-| Nhược điểm | Có thể đăng ký bằng email của người khác | Phải có dịch vụ gửi thư |
+| 1 | [01_schema.sql](../supabase/01_schema.sql) | Project đã chạy `schema.sql` của v1.7 thì bỏ qua |
+| 2 | [02_hustree.sql](../supabase/02_hustree.sql) | Chạy lại vẫn an toàn |
+| 3 | [03_seed.sql](../supabase/03_seed.sql) | **Chỉ chạy một lần**: 10 trường/khoa, 68 ngành, 4 môn mẫu |
+| Tùy chọn | [04_demo.sql](../supabase/04_demo.sql) | Dữ liệu mẫu để xem thử; xóa bằng [05_demo_cleanup.sql](../supabase/05_demo_cleanup.sql) |
 
-Khi dùng cách A mà có người quên mật khẩu: quản trị viên xử lý ở **Authentication → Users**.
+Nếu Supabase cảnh báo về `drop policy`, `drop trigger` hay `drop`..., chọn chạy tiếp: các lệnh này chỉ thay policy và trigger của Hustree, không xóa dữ liệu.
 
-## 4. Nối vào code
+Kiểm tra: **Table Editor** có 19 bảng, `majors` 68 dòng; **Storage** có bucket `contributions` ở chế độ private.
 
-1. Bấm nút **Connect** ở đầu trang Supabase, chép **Project URL** và **Publishable key** (`sb_publishable_...`).
-2. Điền vào [public/js/config.js](../public/js/config.js):
+## 3. Tạo admin đầu tiên
 
-```js
-export const SUPABASE_URL = 'https://ten-project.supabase.co';
-export const SUPABASE_KEY = 'sb_publishable_...';
+1. Đăng ký tài khoản trên web như bình thường.
+2. Vào SQL Editor, đổi email rồi chạy:
+
+```sql
+insert into public.profiles (user_id, role)
+select id, 'admin' from auth.users where email = 'email-cua-ban@example.com'
+on conflict (user_id) do update set role = 'admin';
 ```
 
-| Khóa | Đưa vào `public/js/config.js`? |
-|---|---|
-| `sb_publishable_...` hoặc `anon` | Được, kể cả commit lên Git |
-| `sb_secret_...`, `service_role` | **Tuyệt đối không**, khóa này bỏ qua mọi phân quyền |
-| Mật khẩu database | **Tuyệt đối không** |
+3. Tải lại web, thanh trên cùng có mục **Quản trị**. Các admin sau cấp ở **Quản trị → Thành viên**.
 
-Kizuna tự từ chối chạy nếu phát hiện khóa bí mật trong `public/js/config.js`.
+## 4. Cấu hình đăng nhập
 
-## 5. Kiểm tra
+**Authentication → URL Configuration**: Site URL là `https://kizuna-hust-mvp.vercel.app/`; Redirect URLs gồm địa chỉ đó và `http://localhost:3000/`.
 
-1. Chạy `npm run dev`, mở http://localhost:3000.
-2. Đăng ký tài khoản 1, đánh dấu một Node "Đã thông suốt", đặt một câu hỏi.
-3. Mở cửa sổ ẩn danh, đăng ký tài khoản 2: tiến độ phải **trống**, thấy câu hỏi nhưng **không biết ai hỏi**.
-4. Đăng nhập tài khoản 1 ở cửa sổ ẩn danh: tiến độ phải **hiện lại**.
-5. Chỉ push lên `main` sau khi các bước trên đúng. Nếu push khi `public/js/config.js` còn trống, web sẽ chỉ hiện "Chưa sẵn sàng".
+**Authentication → Sign In / Providers**: bật **Allow new users to sign up** và **Email**.
+
+> Email mặc định của Supabase **chỉ gửi được cho thành viên project, tối đa 2 thư mỗi giờ**.
+
+| | Thử MVP nhanh | Dùng thật |
+|---|---|---|
+| Confirm email | **Tắt** | **Bật**, kèm Custom SMTP |
+| Quên mật khẩu | Không gửi được cho người ngoài nhóm | Hoạt động |
+
+## 5. Nối vào code
+
+Nút **Connect** → chép **Project URL** và **Publishable key** vào [public/js/config.js](../public/js/config.js). Không bao giờ dùng `sb_secret_...`, `service_role` hay mật khẩu database; app tự từ chối chạy nếu phát hiện khóa bí mật.
 
 ## Quản trị hằng ngày
 
-| Việc | Cách làm |
+| Việc | Ở đâu |
 |---|---|
-| Ẩn câu hỏi, phản hồi vi phạm | Table Editor → `questions` / `replies` → `hidden` = `true` |
-| Xem báo cáo, góp ý | Table Editor → `reports`, `feedback` |
-| Xem Node nhiều người kẹt | SQL bên dưới |
-| Khóa, xóa người dùng | Authentication → Users (xóa thì mất tiến độ, câu hỏi vẫn còn nhưng không gắn với ai) |
+| Duyệt tài liệu, sửa nội dung, ẩn câu hỏi, cấp quyền | Trang **Quản trị** trên web |
+| Xem góp ý | Table Editor → `feedback` |
+| Khóa, xóa người dùng | Authentication → Users |
+| Dung lượng tệp | Storage → `contributions` |
+
+Node nhiều người kẹt:
 
 ```sql
 select node_id, count(*) as so_nguoi from public.node_progress where status = 'stuck' group by node_id order by 2 desc;
 ```
 
-Gói miễn phí **tạm dừng project sau 1 tuần không hoạt động**. Trước buổi demo hoặc phỏng vấn, mở Dashboard kiểm tra và bấm khôi phục nếu cần.
+Gói miễn phí **tạm dừng project sau 1 tuần không hoạt động**. Trước buổi demo, mở Dashboard kiểm tra.
 
-## Dữ liệu nằm ở đâu
+## Bảo mật
 
-| Bảng | Nội dung | Ai đọc, ghi được |
-|---|---|---|
-| `auth.users` | Email, mật khẩu đã băm (Supabase quản lý) | Quản trị viên |
-| `node_progress` | Trạng thái từng Node | Chính chủ |
-| `study_state` | Flash-check đã mở, checklist | Chính chủ |
-| `questions`, `replies`, `empathy` | Hỏi đáp | Qua hàm, không lộ người gửi |
-| `reports`, `feedback` | Báo cáo, góp ý | Gửi qua hàm, chỉ quản trị viên đọc |
+- Mọi bảng bật RLS. Chỉ `node_progress` và `study_state` được gọi trực tiếp, mỗi người thấy dòng của mình. Phần còn lại đi qua hàm; hàm `admin_*` tự kiểm tra vai trò. **Không thêm policy cho các bảng khác.**
+- Advisors có thể nhắc “RLS enabled no policy” hoặc “security definer”: đó là chủ ý.
+- Nội dung học chỉ tải về sau khi đăng nhập. Việc khóa Node chỉ ở giao diện.
+- Tệp đóng góp nằm trong kho riêng tư: chỉ người gửi, admin, và mọi người (sau khi được duyệt) xem được, qua đường dẫn hết hạn sau 10 phút. Chỉ nhận PDF, PNG, JPG tối đa 10 MB.
 
-Môn học, Node, giảng viên và đề thi vẫn nằm trong code.
+## Giới hạn
 
-## Giới hạn cần biết
-
-- Yêu cầu đăng nhập được kiểm tra ở giao diện. Dữ liệu người dùng được Supabase bảo vệ thật, nhưng **nội dung bài học nằm trong file JS công khai**, người biết kỹ thuật vẫn xem được khi chưa đăng nhập.
-- Việc khóa Node cũng chỉ ở giao diện.
-- Câu hỏi cũ trên Vercel Blob **không tự chuyển sang**. Chúng vẫn còn trong Blob cho tới khi chủ project xóa.
-- Nếu một tài khoản mở trên hai máy cùng lúc, máy kia thấy thay đổi sau khi tải lại trang.
-
-Tài liệu gốc: [SMTP](https://supabase.com/docs/guides/auth/auth-smtp) · [API keys](https://supabase.com/docs/guides/api/api-keys) · [Redirect URLs](https://supabase.com/docs/guides/auth/redirect-urls)
+- Thông báo cập nhật mỗi 45 giây và khi quay lại tab.
+- Việc xếp 68 ngành vào trường/khoa, và môn vào năm học, là dữ liệu tạm do nhóm nhập; admin cần kiểm tra theo khung chương trình thật.
+- Từ chối tài liệu không tự xóa tệp trong Storage.

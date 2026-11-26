@@ -1,4 +1,4 @@
-/* Kizuna — chữ nội dung 16px, nhỏ nhất 14px. Một màu chính (chàm); xanh lá chỉ dùng cho "đã thông suốt". */
+/* Hustree — chữ nội dung 16px, nhỏ nhất 14px. Một màu chính (chàm); xanh lá chỉ dùng cho "đã thông suốt". */
 :root {
   --ink: #1b2140; --muted: #5a6183; --line: #e2e5f1; --bg: #f5f6fc; --panel: #fff;
   --brand: #3a49c9; --brand-deep: #2c38a3; --brand-soft: #eceefc;
@@ -6,6 +6,8 @@
   --warn: #8a5200; --warn-soft: #fff3da; --bad: #b52b3f; --bad-soft: #fdecee;
   --thread: #e4503c;
   --r: 16px; --r-s: 12px;
+  /* Lề giữa nội dung và mép màn hình: rộng dần theo màn hình. */
+  --gutter: clamp(48px, 6.5vw, 128px); --page-top: 56px;
   --shadow: 0 1px 2px rgb(27 33 64 / .05), 0 10px 28px rgb(27 33 64 / .06);
   --display: 'Bricolage Grotesque', 'Be Vietnam Pro', system-ui, sans-serif;
   font-family: 'Be Vietnam Pro', system-ui, sans-serif; font-size: 16px; line-height: 1.6;
@@ -32,15 +34,18 @@ svg { flex: none; }
 .skip-link { position: absolute; left: 12px; top: -60px; z-index: 60; background: var(--ink); color: #fff; padding: 10px 16px; border-radius: 10px; }
 .skip-link:focus { top: 12px; }
 .topbar { position: sticky; top: 0; z-index: 20; background: #fff; border-bottom: 1px solid var(--line); }
-.topbar-inner { max-width: 1200px; height: 68px; margin: auto; padding: 0 28px; display: flex; align-items: center; }
+.topbar-inner { max-width: 1680px; height: 76px; margin: auto; padding: 0 var(--gutter); display: flex; align-items: center; }
 .brand { display: flex; align-items: center; gap: 11px; font: 800 1.45rem var(--display); letter-spacing: -.03em; }
-.brand-mark { width: 44px; height: 44px; border-radius: 15px; display: grid; place-items: center; background: #193f47; color: #c7f1d8; font: 700 25px serif; box-shadow: 0 7px 17px #1b51472b; }
+.brand-mark { width: 44px; height: 44px; }
+.brand-name b { color: var(--ok); }
 .nav { display: flex; gap: 6px; margin-left: auto; }
 .nav-link { display: flex; align-items: center; gap: 9px; padding: 10px 16px; border-radius: 12px; color: var(--muted); font-weight: 600; }
 .nav-link:hover, .nav-link[aria-current] { color: var(--brand); background: var(--brand-soft); }
-.content { max-width: 1200px; min-height: calc(100vh - 170px); margin: auto; padding: 36px 28px 72px; }
-.footer { max-width: 1200px; margin: auto; padding: 24px 28px 36px; display: flex; flex-wrap: wrap; gap: 8px 24px; justify-content: space-between; color: var(--muted); font-size: .9rem; border-top: 1px solid var(--line); }
-.footer-link { color: var(--brand); font-weight: 600; }
+.layout { max-width: 1680px; margin: auto; padding: 0 var(--gutter); display: grid; grid-template-columns: minmax(0, 1fr) 196px; gap: 56px; align-items: start; }
+.layout.is-collapsed { grid-template-columns: minmax(0, 1fr) 48px; gap: 40px; }
+.layout.is-single { grid-template-columns: minmax(0, 1fr); }
+.content { min-width: 0; min-height: calc(100vh - 170px); padding: var(--page-top) 0 112px; container: page / inline-size; }
+.sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
 .narrow { max-width: 780px; margin: auto; }
 .stack { display: grid; gap: 28px; }
 .stack h2 { margin-bottom: 6px; }
